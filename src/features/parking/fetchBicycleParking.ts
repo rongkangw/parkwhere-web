@@ -14,7 +14,7 @@ export async function fetchBikeParking(
 
   if (!res.ok) {
     const errorText = await res.text();
-    throw new Error(`Failed to fetch bike parking: ${res.status} ${errorText}`);
+    throw new Error(`Code: ${res.status} ${errorText}`);
   }
 
   const data = await res.json();

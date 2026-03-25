@@ -11,7 +11,8 @@ import { useBikeParking } from "@/hooks/useBikeParking";
 import { useMapStore } from "@/state/MapState";
 import toGeoJson from "@/app/utils/toGeoJson";
 import { bikeParkingLayerPaint } from "@/app/utils/mapMarkerLayerStyle";
-import BikeParkingPopup from "@/components/map/BikeParkingPopup";
+import MapErrorPopup from "@/components/map/MapErrorPopup";
+import BikeParkingPopup from "@/components/map/ParkingDetailPopup";
 import {
   FOCUS_DURATION,
   FOCUS_ZOOM,
@@ -46,6 +47,7 @@ export default function MapView() {
   const {
     data: racks,
     error,
+    isError,
     isLoading,
   } = useBikeParking(queryLatitude, queryLongitude);
 
@@ -89,42 +91,43 @@ export default function MapView() {
     setSelectedRack(null);
   }, [setSelectedRack]);
 
-  if (isLoading && parkingGeoJson.features.length === 0) {
-    return <div>Loading bike parking...</div>;
-  }
-
-  if (error) {
-    console.error("Error fetching bike parking data:", error);
-    return <div>Error loading racks</div>;
-  }
-
   return (
-    <Map
-      ref={mapRef}
-      initialViewState={{
-        latitude: cameraLatitude,
-        longitude: cameraLongitude,
-        zoom: INITIAL_ZOOM,
-      }}
-      style={{ width: "100%", height: "100%" }}
-      mapStyle={MAP_STYLE_URL}
-      interactiveLayerIds={[MAP_LAYER_ID]}
-      onMoveEnd={handleMoveEnd}
-      onClick={handleMarkerClick}
-    >
-      {parkingGeoJson.features.length > 0 && (
-        <Source id={MAP_SOURCE_ID} type="geojson" data={parkingGeoJson}>
-          <Layer
-            id={MAP_LAYER_ID}
-            type="circle"
-            paint={bikeParkingLayerPaint}
-          />
-        </Source>
-      )}
+    <div className="relative h-full w-full">
+      <Map
+        ref={mapRef}
+        initialViewState={{
+          latitude: cameraLatitude,
+          longitude: cameraLongitude,
+          zoom: INITIAL_ZOOM,
+        }}
+        style={{ width: "100%", height: "100%" }}
+        mapStyle={MAP_STYLE_URL}
+        interactiveLayerIds={[MAP_LAYER_ID]}
+        onMoveEnd={handleMoveEnd}
+        onClick={handleMarkerClick}
+      >
+        {parkingGeoJson.features.length > 0 && (
+          <Source id={MAP_SOURCE_ID} type="geojson" data={parkingGeoJson}>
+            <Layer
+              id={MAP_LAYER_ID}
+              type="circle"
+              paint={bikeParkingLayerPaint}
+            />
+          </Source>
+        )}
 
-      {selectedRack && (
-        <BikeParkingPopup rack={selectedRack} onClose={handlePopupClose} />
+        {selectedRack && (
+          <BikeParkingPopup rack={selectedRack} onClose={handlePopupClose} />
+        )}
+      </Map>
+
+      {isLoading && (
+        <MapErrorPopup
+          message={"Loading bike parking data..."}
+          variant="loading"
+        />
       )}
-    </Map>
+      {isError && <MapErrorPopup message={error.message} variant="error" />}
+    </div>
   );
 }
