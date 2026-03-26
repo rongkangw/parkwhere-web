@@ -1,16 +1,16 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { fetchBikeParking } from "@/features/parking/fetchBicycleParking";
-import { ParkingSpotResponse } from "@/constants/ParkingSpotResponse";
 import { DEFAULT_QUERY_DISTANCE } from "@/constants/MapConstants";
+import fetchOnlineRacks from "@/features/parking/fetchOnlineRacks";
+import { ParkingSpot } from "@/constants/ParkingSpot";
 
-export function useBikeParking(
+export function useOnlineRacks(
   lat: number,
   lng: number,
   dist: number = DEFAULT_QUERY_DISTANCE,
 ) {
-  return useQuery<ParkingSpotResponse[], Error>({
+  return useQuery<ParkingSpot[], Error>({
     queryKey: ["bikeParking", lat, lng, dist],
-    queryFn: () => fetchBikeParking(lat, lng, dist),
+    queryFn: () => fetchOnlineRacks(lat, lng, dist),
     enabled: lat !== undefined && lng !== undefined,
     retry: 3,
     retryDelay: (attemptCount) => {

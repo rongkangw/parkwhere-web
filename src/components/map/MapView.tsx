@@ -7,8 +7,7 @@ import Map, {
   type MapLayerMouseEvent,
   type MapRef,
 } from "react-map-gl/maplibre";
-import { useBikeParking } from "@/hooks/useBikeParking";
-import { useMapStore } from "@/state/MapState";
+import { useOnlineRacks } from "@/hooks/useOnlineRacks";
 import toGeoJson from "@/app/utils/toGeoJson";
 import { bikeParkingLayerPaint } from "@/app/utils/mapMarkerLayerStyle";
 import MapErrorPopup from "@/components/map/MapErrorPopup";
@@ -19,9 +18,10 @@ import {
   INITIAL_ZOOM,
   MAP_LAYER_ID,
   MAP_SOURCE_ID,
-  MAP_STYLE_URL,
   QUERY_COORDINATE_PRECISION,
 } from "@/constants/MapConstants";
+import { useMapStore } from "@/hooks/useMapStore";
+import { mapStyle } from "@/constants/mapstyle/OnemapStyle";
 
 function roundCoordinate(value: number): number {
   return Number(value.toFixed(QUERY_COORDINATE_PRECISION));
@@ -49,7 +49,7 @@ export default function MapView() {
     error,
     isError,
     isLoading,
-  } = useBikeParking(queryLatitude, queryLongitude);
+  } = useOnlineRacks(queryLatitude, queryLongitude);
 
   const parkingGeoJson = useMemo<FeatureCollection<Point>>(() => {
     return toGeoJson(racks);
@@ -65,14 +65,25 @@ export default function MapView() {
 
   const handleMarkerClick = useCallback(
     (event: MapLayerMouseEvent) => {
+      const clickedFeature = event.features?.find(
+        (feature) => feature.layer.id === MAP_LAYER_ID,
+      );
+
+      if (!clickedFeature) {
+        return;
+      }
+
       const rackLat = event.lngLat.lat;
       const rackLng = event.lngLat.lng;
-      const rackIndex = (event.features?.[0].id as number) ?? -1;
+      const rackIndex = clickedFeature.id as number;
 
       const rack = racks?.[rackIndex] ?? null;
+
       if (!rack) {
         console.warn("Clicked rack not found in data");
         return;
+      } else {
+        console.log("Clicked rack:", rack);
       }
 
       setSelectedRack(rack);
@@ -101,7 +112,7 @@ export default function MapView() {
           zoom: INITIAL_ZOOM,
         }}
         style={{ width: "100%", height: "100%" }}
-        mapStyle={MAP_STYLE_URL}
+        mapStyle={mapStyle}
         interactiveLayerIds={[MAP_LAYER_ID]}
         onMoveEnd={handleMoveEnd}
         onClick={handleMarkerClick}

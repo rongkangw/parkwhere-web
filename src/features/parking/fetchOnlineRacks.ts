@@ -1,10 +1,11 @@
+import { ParkingSpot } from "@/constants/ParkingSpot";
 import { ParkingSpotResponse } from "@/constants/ParkingSpotResponse";
 
-export async function fetchBikeParking(
+export default async function fetchOnlineRacks(
   lat: number,
   lng: number,
   dist: number = 0.75,
-): Promise<ParkingSpotResponse[]> {
+): Promise<ParkingSpot[]> {
   const params = new URLSearchParams({
     lat: String(lat),
     lng: String(lng),
@@ -22,13 +23,15 @@ export async function fetchBikeParking(
 
   console.debug("Fetched " + rawSpots.length + " bike parking spots from API");
 
-  // Datamall fields can be strings; normalize before map rendering.
-  return rawSpots.map((spot: Partial<ParkingSpotResponse>) => ({
-    Description: String(spot.Description ?? ""),
-    Latitude: Number(spot.Latitude),
-    Longitude: Number(spot.Longitude),
-    RackType: String(spot.RackType ?? ""),
-    RackCount: Number(spot.RackCount ?? 0),
-    ShelterIndicator: spot.ShelterIndicator === "Y" ? "Y" : "N",
+  return rawSpots.map((spot: Partial<ParkingSpotResponse>, index: number) => ({
+    id: index,
+    name: String(spot.Description ?? ""),
+    lat: Number(spot.Latitude),
+    lng: Number(spot.Longitude),
+    capacity: Number(spot.RackCount ?? 0),
+    occupancy: 0, // Datamall doesn't provide real-time occupancy; set to 0
+    rackType: String(spot.RackType ?? ""),
+    sheltered: spot.ShelterIndicator === "Y",
+    sourceType: "official",
   }));
 }

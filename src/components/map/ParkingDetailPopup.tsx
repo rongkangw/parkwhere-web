@@ -1,14 +1,16 @@
 import { Popup } from "react-map-gl/maplibre";
-import type { ParkingSpotResponse } from "@/constants/ParkingSpotResponse";
 import {
   POPUP_ANCHOR,
   POPUP_MIN_WIDTH,
   POPUP_OFFSET,
   POPUP_TEXT_COLOR,
 } from "@/constants/MapConstants";
+import { ParkingSpot } from "@/constants/ParkingSpot";
+import PopupSourceTag from "@/components/map/PopupSourceTag";
+import PopupOccupancyBar from "@/components/map/PopupOccupancyBar";
 
 interface BikeParkingPopupProps {
-  rack: ParkingSpotResponse;
+  rack: ParkingSpot;
   onClose: () => void;
 }
 
@@ -18,18 +20,24 @@ export default function BikeParkingPopup({
 }: BikeParkingPopupProps) {
   return (
     <Popup
-      longitude={rack.Longitude}
-      latitude={rack.Latitude}
+      longitude={rack.lng}
+      latitude={rack.lat}
       anchor={POPUP_ANCHOR}
       closeOnClick={false}
       onClose={onClose}
       offset={POPUP_OFFSET}
     >
       <div style={{ minWidth: POPUP_MIN_WIDTH, color: POPUP_TEXT_COLOR }}>
-        <div style={{ fontWeight: 600 }}>{rack.Description}</div>
-        <div>Rack count: {rack.RackCount}</div>
-        <div>Rack type: {rack.RackType}</div>
-        <div>Shelter: {rack.ShelterIndicator === "Y" ? "Yes" : "No"}</div>
+        <div className="flex items-center gap-2">
+          <div className="font-semibold">{rack.name}</div>
+          <PopupSourceTag sourceType={rack.sourceType} />
+        </div>
+        <PopupOccupancyBar
+          occupancy={rack.occupancy}
+          capacity={rack.capacity}
+        />
+        <div>Type: {rack.rackType}</div>
+        <div>Shelter: {rack.sheltered ? "Yes" : "No"}</div>
       </div>
     </Popup>
   );

@@ -1,5 +1,3 @@
-export const MAP_STYLE_URL = "/mapstyle/OneMapStyle.json";
-
 export const DEFAULT_LATITUDE = 1.3521;
 export const DEFAULT_LONGITUDE = 103.8198;
 export const DEFAULT_QUERY_DISTANCE = 0.75; // in kilometers
