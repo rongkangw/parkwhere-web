@@ -1,10 +1,10 @@
-export interface ParkingSpot {
+export default interface ParkingSpot {
   id: string;
   name: string;
   lat: number;
   lng: number;
   sheltered: boolean;
-  rackType: string;
+  parkingType: string;
   sourceType: "official" | "community";
   capacity: number;
   occupancy: number;

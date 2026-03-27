@@ -1,4 +1,4 @@
-import { ParkingSpot } from "@/constants/ParkingSpot";
+import ParkingSpot from "@/core/constants/ParkingSpot";
 import type { FeatureCollection, Point } from "geojson";
 
 export default function toParkingGeoJson(
@@ -9,11 +9,11 @@ export default function toParkingGeoJson(
     features:
       racks?.map((rack) => ({
         type: "Feature" as const,
-        id: rack.id,
         properties: {
+          id: rack.id,
           name: rack.name,
           sheltered: rack.sheltered,
-          rackType: rack.rackType,
+          rackType: rack.parkingType,
           sourceType: rack.sourceType,
           capacity: rack.capacity,
           occupancy: rack.occupancy,

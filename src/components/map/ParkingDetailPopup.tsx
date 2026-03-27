@@ -4,8 +4,8 @@ import {
   POPUP_MIN_WIDTH,
   POPUP_OFFSET,
   POPUP_TEXT_COLOR,
-} from "@/constants/MapConstants";
-import { ParkingSpot } from "@/constants/ParkingSpot";
+} from "@/core/constants/map/MapConstants";
+import ParkingSpot from "@/core/constants/ParkingSpot";
 import PopupSourceTag from "@/components/map/PopupSourceTag";
 import PopupOccupancyBar from "@/components/map/PopupOccupancyBar";
 
@@ -36,7 +36,7 @@ export default function BikeParkingPopup({
           occupancy={rack.occupancy}
           capacity={rack.capacity}
         />
-        <div>Type: {rack.rackType}</div>
+        <div>Type: {rack.parkingType}</div>
         <div>Shelter: {rack.sheltered ? "Yes" : "No"}</div>
       </div>
     </Popup>

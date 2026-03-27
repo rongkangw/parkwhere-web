@@ -1,12 +1,14 @@
 export const DEFAULT_LATITUDE = 1.3521;
 export const DEFAULT_LONGITUDE = 103.8198;
 export const DEFAULT_QUERY_DISTANCE = 0.75; // in kilometers
+export const DEFAULT_QUERY_DISTANCE_METERS = DEFAULT_QUERY_DISTANCE * 1000; // in meters
 
 export const INITIAL_ZOOM = 13;
 export const FOCUS_ZOOM = 16;
 export const FOCUS_DURATION = 700;
 
 export const QUERY_COORDINATE_PRECISION = 3;
+export const STORAGE_COORDINATE_PRECISION = 6;
 
 export const MAP_SOURCE_ID = "bike-parking-source";
 export const MAP_LAYER_ID = "bike-parking-layer";

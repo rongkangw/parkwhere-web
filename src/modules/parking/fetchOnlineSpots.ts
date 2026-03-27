@@ -1,7 +1,8 @@
-import { ParkingSpot } from "@/constants/ParkingSpot";
-import { ParkingSpotResponse } from "@/constants/ParkingSpotResponse";
+import createParkingSpotKey from "@/app/utils/createParkingSpotId";
+import ParkingSpot from "@/core/constants/ParkingSpot";
+import ParkingSpotApiResponse from "@/core/constants/ParkingSpotApiResponse";
 
-export default async function fetchOnlineRacks(
+export default async function fetchOnlineSpots(
   lat: number,
   lng: number,
   dist: number = 0.75,
@@ -11,7 +12,12 @@ export default async function fetchOnlineRacks(
     lng: String(lng),
     dist: String(dist),
   });
-  const res = await fetch(`/api/bike-parking?${params.toString()}`);
+
+  console.log(
+    "Fetching online parking spots with params: " + params.toString(),
+  );
+
+  const res = await fetch(`/api/fetch_online_spots?${params.toString()}`);
 
   if (!res.ok) {
     const errorText = await res.text();
@@ -23,14 +29,14 @@ export default async function fetchOnlineRacks(
 
   console.debug("Fetched " + rawSpots.length + " bike parking spots from API");
 
-  return rawSpots.map((spot: Partial<ParkingSpotResponse>, index: number) => ({
-    id: index,
+  return rawSpots.map((spot: Partial<ParkingSpotApiResponse>) => ({
+    id: createParkingSpotKey(spot.Latitude as number, spot.Longitude as number),
     name: String(spot.Description ?? ""),
     lat: Number(spot.Latitude),
     lng: Number(spot.Longitude),
     capacity: Number(spot.RackCount ?? 0),
     occupancy: 0, // Datamall doesn't provide real-time occupancy; set to 0
-    rackType: String(spot.RackType ?? ""),
+    parkingType: String(spot.RackType ?? ""),
     sheltered: spot.ShelterIndicator === "Y",
     sourceType: "official",
   }));

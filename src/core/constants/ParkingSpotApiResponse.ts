@@ -1,4 +1,4 @@
-export interface ParkingSpotResponse {
+export default interface ParkingSpotApiResponse {
   Description: string;
   Latitude: number;
   Longitude: number;

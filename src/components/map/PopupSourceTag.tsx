@@ -1,4 +1,4 @@
-import { ParkingSpot } from "@/constants/ParkingSpot";
+import ParkingSpot from "@/core/constants/ParkingSpot";
 
 interface SourceTypeBadgeProps {
   sourceType: ParkingSpot["sourceType"];

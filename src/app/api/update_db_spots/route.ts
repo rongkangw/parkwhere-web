@@ -1,0 +1,125 @@
+import { NextRequest, NextResponse } from "next/server";
+import { neon } from "@neondatabase/serverless";
+import ParkingSpot from "@/core/constants/ParkingSpot";
+import createParkingSpotKey from "@/app/utils/createParkingSpotId";
+
+type UpdateDbSpotsRequest = {
+  tileId: string;
+  centerLat: number;
+  centerLng: number;
+  spots: ParkingSpot[];
+};
+
+export async function POST(request: NextRequest) {
+  let body: UpdateDbSpotsRequest;
+
+  try {
+    body = (await request.json()) as UpdateDbSpotsRequest;
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const { tileId, centerLat, centerLng, spots } = body;
+
+  if (
+    !tileId ||
+    Number.isNaN(centerLat) ||
+    Number.isNaN(centerLng) ||
+    !Array.isArray(spots)
+  ) {
+    return NextResponse.json(
+      {
+        error: "Invalid body. Required: tileId, centerLat, centerLng, spots[]",
+      },
+      { status: 400 },
+    );
+  }
+
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    return NextResponse.json(
+      { error: "Missing DATABASE_URL" },
+      { status: 500 },
+    );
+  }
+
+  const sql = neon(databaseUrl);
+  try {
+    await sql`
+      INSERT INTO parking_spots (
+        uniqueid,
+        name,
+        location,
+        occupancy,
+        capacity,
+        sheltered,
+        racktype,
+        type
+      )
+      SELECT
+        t.uniqueid,
+        t.name,
+        ST_SetSRID(ST_MakePoint(t.lng, t.lat), 4326)::geography,
+        t.occupancy,
+        t.capacity,
+        t.sheltered,
+        t.racktype,
+        t.type
+      FROM UNNEST(
+        ${spots.map((s) => createParkingSpotKey(s.lat, s.lng))}::text[],
+        ${spots.map((s) => s.name)}::text[],
+        ${spots.map((s) => s.lng)}::float8[],
+        ${spots.map((s) => s.lat)}::float8[],
+        ${spots.map((s) => s.occupancy)}::int[],
+        ${spots.map((s) => s.capacity)}::int[],
+        ${spots.map((s) => s.sheltered)}::boolean[],
+        ${spots.map((s) => s.parkingType)}::text[],
+        ${spots.map((s) => s.sourceType)}::text[]
+      ) AS t(
+        uniqueid,
+        name,
+        lng,
+        lat,
+        occupancy,
+        capacity,
+        sheltered,
+        racktype,
+        type
+      )
+      ON CONFLICT (uniqueid) DO UPDATE SET
+        occupancy = EXCLUDED.occupancy,
+        capacity = EXCLUDED.capacity,
+        sheltered = EXCLUDED.sheltered,
+        name = EXCLUDED.name,
+        racktype = EXCLUDED.racktype,
+        type = EXCLUDED.type;
+      `;
+
+    await sql`
+      INSERT INTO map_tiles (tile_id, center, fetched, last_fetched)
+      VALUES (
+        ${tileId},
+        ST_SetSRID(ST_MakePoint(${centerLng}, ${centerLat}), 4326)::geography,
+        true,
+        NOW()
+      )
+      ON CONFLICT (tile_id) DO UPDATE SET
+        center = EXCLUDED.center,
+        fetched = true,
+        last_fetched = NOW();
+    `;
+
+    return NextResponse.json(
+      { success: true, upsertedCount: spots.length, tileId },
+      { status: 200 },
+    );
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: "Failed to update DB spots",
+        detail: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 },
+    );
+  }
+}
