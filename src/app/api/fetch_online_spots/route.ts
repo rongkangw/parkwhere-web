@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   }
 
   const accountKey = process.env.NEXT_PUBLIC_API_KEY;
-  console.log("Using LTA Account Key:", accountKey ? "Yes" : "No");
+
   if (!accountKey) {
     return NextResponse.json(
       { error: "Missing LTA account key" },

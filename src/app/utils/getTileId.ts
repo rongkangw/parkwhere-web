@@ -1,4 +1,4 @@
-const TILE_SIZE = 0.013; // ~1.5km
+import { TILE_SIZE } from "@/core/constants/map/MapConstants";
 
 export default function getTileId(lat: number, lng: number): string {
   const x = Math.floor(lng / TILE_SIZE);

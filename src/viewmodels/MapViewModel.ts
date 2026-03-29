@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { MapLayerMouseEvent, MapRef } from "react-map-gl/maplibre";
 import toGeoJson from "@/app/utils/toGeoJson";
+import generateCityTileOverlay from "@/app/utils/getTilesForBounds";
 import ParkingSpot from "@/core/constants/ParkingSpot";
 import {
   DEFAULT_LATITUDE,
@@ -14,19 +15,29 @@ import {
 
 type UseMapViewModelArgs = {
   racks: ParkingSpot[];
+  fetchedTileIds: Set<string>;
   onCameraMove: (latitude: number, longitude: number) => void;
 };
 
 export default function useMapViewModel({
   racks,
+  fetchedTileIds,
   onCameraMove,
 }: UseMapViewModelArgs) {
   const mapRef = useRef<MapRef | null>(null);
   const [cameraLatitude, setCameraLatitude] = useState(DEFAULT_LATITUDE);
   const [cameraLongitude, setCameraLongitude] = useState(DEFAULT_LONGITUDE);
-  const [selectedRack, setSelectedRack] = useState<ParkingSpot | null>(null);
+  const [selectedRackId, setSelectedRackId] = useState<string | null>(null);
 
   const parkingGeoJson = useMemo(() => toGeoJson(racks), [racks]);
+  const tileGeoJson = useMemo(
+    () => generateCityTileOverlay(fetchedTileIds),
+    [fetchedTileIds],
+  );
+  const selectedRack = useMemo(
+    () => racks.find((rack) => rack.id === selectedRackId) ?? null,
+    [racks, selectedRackId],
+  );
 
   const setCameraPosition = useCallback(
     (latitude: number, longitude: number) => {
@@ -49,7 +60,7 @@ export default function useMapViewModel({
       );
       if (!rack) return;
 
-      setSelectedRack(rack);
+      setSelectedRackId(rack.id);
       setCameraPosition(rack.lat, rack.lng);
 
       mapRef.current?.flyTo({
@@ -63,7 +74,7 @@ export default function useMapViewModel({
   );
 
   const handlePopupClose = useCallback(() => {
-    setSelectedRack(null);
+    setSelectedRackId(null);
   }, []);
 
   const handleMoveEnd = useCallback(
@@ -80,6 +91,7 @@ export default function useMapViewModel({
     cameraLatitude,
     cameraLongitude,
     selectedRack,
+    tileGeoJson,
     parkingGeoJson,
     setCameraPosition,
     handleMoveEnd,

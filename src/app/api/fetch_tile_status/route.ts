@@ -27,7 +27,6 @@ export async function GET(request: NextRequest) {
   }
 
   const sql = neon(databaseUrl);
-  console.log(`Fetching tile status for tileId: ${tileId}`); // Debug log
 
   try {
     const result = (await sql`
@@ -38,7 +37,6 @@ export async function GET(request: NextRequest) {
         last_fetched
       FROM map_tiles
       WHERE tile_id = ${tileId}
-      LIMIT 1
     `) as DbTileRow[];
 
     if (result.length === 0) {
@@ -49,8 +47,11 @@ export async function GET(request: NextRequest) {
     }
 
     if (result.length > 1) {
-      console.warn(
-        `Multiple entries found for tile ${tileId}. Using the first one.`,
+      return NextResponse.json(
+        {
+          error: "Multiple entries found for tileId",
+        },
+        { status: 400 },
       );
     }
 

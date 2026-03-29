@@ -12,7 +12,7 @@ export default async function fetchDbSpots(
     dist: String(dist),
   });
 
-  console.log("Fetching db parking spots with params: " + params.toString());
+  console.log("(DB) Fetching with params: " + params.toString());
 
   const res = await fetch(`/api/fetch_db_spots?${params.toString()}`);
 
@@ -24,7 +24,7 @@ export default async function fetchDbSpots(
   const data = await res.json();
   const rawSpots = Array.isArray(data) ? data : [];
 
-  console.debug("Fetched " + rawSpots.length + " parking spots from DB");
+  console.debug("(DB) Fetched " + rawSpots.length + " parking spots");
 
   return rawSpots.map(
     (spot: Partial<ParkingSpotDbResponse>): ParkingSpot => ({

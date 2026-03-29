@@ -47,10 +47,6 @@ export async function GET(request: NextRequest) {
 
   const sql = neon(databaseUrl);
 
-  console.log(
-    `ROUTE>TS> Fetching parking spots for lat=${lat}, lng=${lng}, dist=${dist}`,
-  ); // Debug log
-
   try {
     const rows = (await sql`
       SELECT

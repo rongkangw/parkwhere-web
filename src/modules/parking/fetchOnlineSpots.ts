@@ -13,9 +13,7 @@ export default async function fetchOnlineSpots(
     dist: String(dist),
   });
 
-  console.log(
-    "Fetching online parking spots with params: " + params.toString(),
-  );
+  console.log("(ONLINE) Fetching with params: " + params.toString());
 
   const res = await fetch(`/api/fetch_online_spots?${params.toString()}`);
 
@@ -27,7 +25,7 @@ export default async function fetchOnlineSpots(
   const data = await res.json();
   const rawSpots = Array.isArray(data?.value) ? data.value : [];
 
-  console.debug("Fetched " + rawSpots.length + " bike parking spots from API");
+  console.debug("(ONLINE) Fetched " + rawSpots.length + " parking spots");
 
   return rawSpots.map((spot: Partial<ParkingSpotApiResponse>) => ({
     id: createParkingSpotKey(spot.Latitude as number, spot.Longitude as number),

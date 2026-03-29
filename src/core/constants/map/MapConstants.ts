@@ -1,7 +1,13 @@
 export const DEFAULT_LATITUDE = 1.3521;
 export const DEFAULT_LONGITUDE = 103.8198;
-export const DEFAULT_QUERY_DISTANCE = 0.75; // in kilometers
+export const DEFAULT_QUERY_DISTANCE = 1.5; // in kilometers
 export const DEFAULT_QUERY_DISTANCE_METERS = DEFAULT_QUERY_DISTANCE * 1000; // in meters
+
+export const TILE_SIZE = 0.013;
+export const MIN_LNG = 103.6;
+export const MAX_LNG = 104.04;
+export const MIN_LAT = 1.2;
+export const MAX_LAT = 1.48;
 
 export const INITIAL_ZOOM = 13;
 export const FOCUS_ZOOM = 16;

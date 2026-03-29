@@ -36,7 +36,7 @@ export default function BikeParkingPopup({
           occupancy={rack.occupancy}
           capacity={rack.capacity}
         />
-        <div>Type: {rack.parkingType}</div>
+        <div className="mt-1">Type: {rack.parkingType}</div>
         <div>Shelter: {rack.sheltered ? "Yes" : "No"}</div>
       </div>
     </Popup>

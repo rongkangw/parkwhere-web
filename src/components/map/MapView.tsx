@@ -21,6 +21,7 @@ export default function MapView({ vm }: MapViewProps) {
     mapRef,
     cameraLatitude,
     cameraLongitude,
+    tileGeoJson,
     parkingGeoJson,
     selectedRack,
     handleMoveEnd,
@@ -43,6 +44,32 @@ export default function MapView({ vm }: MapViewProps) {
         onMoveEnd={handleMoveEnd}
         onClick={handleMarkerClick}
       >
+        {tileGeoJson && (
+          <Source id="tiles" type="geojson" data={tileGeoJson}>
+            <Layer
+              id="tiles-fill"
+              type="fill"
+              paint={{
+                "fill-color": [
+                  "case",
+                  ["get", "hasData"],
+                  "#4caf50",
+                  "#999999",
+                ],
+                "fill-opacity": 0.3,
+              }}
+            />
+            <Layer
+              id="tiles-line"
+              type="line"
+              paint={{
+                "line-color": "#333333",
+                "line-width": 1,
+              }}
+            />
+          </Source>
+        )}
+
         {parkingGeoJson.features.length > 0 && (
           <Source id={MAP_SOURCE_ID} type="geojson" data={parkingGeoJson}>
             <Layer

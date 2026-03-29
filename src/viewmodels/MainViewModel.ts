@@ -18,8 +18,14 @@ export default function useMainViewModel() {
   const [queryLongitude, setQueryLongitude] =
     useState<number>(DEFAULT_LONGITUDE);
 
-  const { data, error, isError, isLoading, shouldFetchOnlineRacks } =
-    useParkingSpots(queryLatitude, queryLongitude);
+  const {
+    data,
+    error,
+    isError,
+    isLoading,
+    shouldFetchOnlineRacks,
+    fetchedTileIds,
+  } = useParkingSpots(queryLatitude, queryLongitude);
 
   const racks: ParkingSpot[] = useMemo(() => data ?? [], [data]);
 
@@ -38,7 +44,11 @@ export default function useMainViewModel() {
     [],
   );
 
-  const mapVM = useMapViewModel({ racks, onCameraMove: handleCameraMove });
+  const mapVM = useMapViewModel({
+    racks,
+    fetchedTileIds,
+    onCameraMove: handleCameraMove,
+  });
 
   const handleSearchQuery = useCallback(
     (query: string) => {
