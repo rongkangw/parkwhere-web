@@ -8,15 +8,27 @@ import {
 } from "@/core/constants/map/MapConstants";
 import useParkingSpots from "@/hooks/useParkingSpots";
 import usePersistParkingSpots from "@/hooks/usePersistParkingSpots";
-import useMapViewModel from "@/viewmodels/MapViewModel";
+import parseGeoInput from "@/app/utils/parseGeoInput";
 
-export default function useMainViewModel() {
+type UseMainViewModelArgs = {
+  initialQueryLocation?: {
+    latitude: number;
+    longitude: number;
+  };
+};
+
+export default function useMainViewModel({
+  initialQueryLocation,
+}: UseMainViewModelArgs = {}) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<string[]>([]);
+  const searchResults: string[] = [];
 
-  const [queryLatitude, setQueryLatitude] = useState<number>(DEFAULT_LATITUDE);
-  const [queryLongitude, setQueryLongitude] =
-    useState<number>(DEFAULT_LONGITUDE);
+  const [queryLatitude, setQueryLatitude] = useState<number>(
+    initialQueryLocation?.latitude ?? DEFAULT_LATITUDE,
+  );
+  const [queryLongitude, setQueryLongitude] = useState<number>(
+    initialQueryLocation?.longitude ?? DEFAULT_LONGITUDE,
+  );
 
   const {
     data,
@@ -36,7 +48,7 @@ export default function useMainViewModel() {
     shouldPersist: shouldFetchOnlineRacks && !!data,
   });
 
-  const handleCameraMove = useCallback(
+  const setQueryLocation = useCallback(
     (latitude: number, longitude: number) => {
       setQueryLatitude(latitude);
       setQueryLongitude(longitude);
@@ -44,38 +56,43 @@ export default function useMainViewModel() {
     [],
   );
 
-  const mapVM = useMapViewModel({
-    racks,
-    fetchedTileIds,
-    onCameraMove: handleCameraMove,
-  });
+  const handleCameraMove = useCallback(
+    (latitude: number, longitude: number) => {
+      setQueryLocation(latitude, longitude);
+    },
+    [setQueryLocation],
+  );
 
-  const handleSearchQuery = useCallback(
+  const handleSearchQuery = useCallback((query: string) => {
+    setSearchQuery(query);
+  }, []);
+
+  const runMapSearch = useCallback(
     (query: string) => {
-      setSearchQuery(query);
-
-      const normalizedQuery = query.trim().toLowerCase();
-      if (!normalizedQuery) {
-        setSearchResults([]);
-        return;
+      const parsedCoordinates = parseGeoInput(query);
+      if (!parsedCoordinates) {
+        handleSearchQuery(query);
+        return null;
       }
 
-      const matchedRackNames = racks
-        .filter((rack) => rack.name.toLowerCase().includes(normalizedQuery))
-        .map((rack) => rack.name);
-
-      setSearchResults(matchedRackNames);
+      setQueryLocation(parsedCoordinates.latitude, parsedCoordinates.longitude);
+      return parsedCoordinates;
     },
-    [racks],
+    [handleSearchQuery, setQueryLocation],
   );
 
   return {
-    mapVM,
     racks,
+    fetchedTileIds,
     isLoading,
     isError,
     error,
+    queryLatitude,
+    queryLongitude,
+    setQueryLocation,
+    handleCameraMove,
     handleSearchQuery,
+    runMapSearch,
     searchQuery,
     searchResults,
   };

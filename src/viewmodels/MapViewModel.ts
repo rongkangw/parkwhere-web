@@ -16,17 +16,23 @@ import {
 type UseMapViewModelArgs = {
   racks: ParkingSpot[];
   fetchedTileIds: Set<string>;
+  initialCameraLatitude?: number;
+  initialCameraLongitude?: number;
   onCameraMove: (latitude: number, longitude: number) => void;
 };
 
 export default function useMapViewModel({
   racks,
   fetchedTileIds,
+  initialCameraLatitude = DEFAULT_LATITUDE,
+  initialCameraLongitude = DEFAULT_LONGITUDE,
   onCameraMove,
 }: UseMapViewModelArgs) {
   const mapRef = useRef<MapRef | null>(null);
-  const [cameraLatitude, setCameraLatitude] = useState(DEFAULT_LATITUDE);
-  const [cameraLongitude, setCameraLongitude] = useState(DEFAULT_LONGITUDE);
+  const [cameraLatitude, setCameraLatitude] = useState(initialCameraLatitude);
+  const [cameraLongitude, setCameraLongitude] = useState(
+    initialCameraLongitude,
+  );
   const [selectedRackId, setSelectedRackId] = useState<string | null>(null);
 
   const parkingGeoJson = useMemo(() => toGeoJson(racks), [racks]);
@@ -47,6 +53,19 @@ export default function useMapViewModel({
     [],
   );
 
+  const focusOnCoordinates = useCallback(
+    (latitude: number, longitude: number) => {
+      setCameraPosition(latitude, longitude);
+      mapRef.current?.flyTo({
+        center: [longitude, latitude],
+        zoom: FOCUS_ZOOM,
+        duration: FOCUS_DURATION,
+        essential: true,
+      });
+    },
+    [setCameraPosition],
+  );
+
   const handleMarkerClick = useCallback(
     (event: MapLayerMouseEvent) => {
       const clickedFeature = event.features?.find(
@@ -61,16 +80,9 @@ export default function useMapViewModel({
       if (!rack) return;
 
       setSelectedRackId(rack.id);
-      setCameraPosition(rack.lat, rack.lng);
-
-      mapRef.current?.flyTo({
-        center: [rack.lng, rack.lat],
-        zoom: FOCUS_ZOOM,
-        duration: FOCUS_DURATION,
-        essential: true,
-      });
+      focusOnCoordinates(rack.lat, rack.lng);
     },
-    [racks, setCameraPosition],
+    [focusOnCoordinates, racks],
   );
 
   const handlePopupClose = useCallback(() => {
@@ -86,6 +98,10 @@ export default function useMapViewModel({
     [onCameraMove, setCameraPosition],
   );
 
+  const handleMapLoad = useCallback(() => {
+    focusOnCoordinates(initialCameraLatitude, initialCameraLongitude);
+  }, [focusOnCoordinates, initialCameraLatitude, initialCameraLongitude]);
+
   return {
     mapRef,
     cameraLatitude,
@@ -94,6 +110,8 @@ export default function useMapViewModel({
     tileGeoJson,
     parkingGeoJson,
     setCameraPosition,
+    focusOnCoordinates,
+    handleMapLoad,
     handleMoveEnd,
     handleMarkerClick,
     handlePopupClose,

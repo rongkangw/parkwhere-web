@@ -24,6 +24,7 @@ export default function MapView({ vm }: MapViewProps) {
     tileGeoJson,
     parkingGeoJson,
     selectedRack,
+    handleMapLoad,
     handleMoveEnd,
     handleMarkerClick,
     handlePopupClose,
@@ -41,6 +42,7 @@ export default function MapView({ vm }: MapViewProps) {
         style={{ width: "100%", height: "100%" }}
         mapStyle={mapStyle}
         interactiveLayerIds={[MAP_LAYER_ID]}
+        onLoad={handleMapLoad}
         onMoveEnd={handleMoveEnd}
         onClick={handleMarkerClick}
       >

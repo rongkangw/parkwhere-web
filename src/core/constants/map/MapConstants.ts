@@ -10,7 +10,7 @@ export const MIN_LAT = 1.2;
 export const MAX_LAT = 1.48;
 
 export const INITIAL_ZOOM = 13;
-export const FOCUS_ZOOM = 16;
+export const FOCUS_ZOOM = 14;
 export const FOCUS_DURATION = 700;
 
 export const QUERY_COORDINATE_PRECISION = 3;
