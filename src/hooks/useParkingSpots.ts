@@ -26,7 +26,7 @@ export default function useParkingSpots(
     queryKey: ["tileStatus", tile],
     queryFn: () => fetchTileStatus(tile),
     enabled: !!tile,
-    staleTime: 0,
+    staleTime: 10 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
@@ -66,8 +66,7 @@ export default function useParkingSpots(
   const spotsQuery = useQuery<ParkingSpot[], Error>({
     queryKey: [
       "bikeParking",
-      lat,
-      lng,
+      tile,
       dist,
       shouldFetchOnlineRacks ? 1 : 0, // to differentiate cache for online vs db fetch
     ],

@@ -8,19 +8,22 @@ import { buildMapRoute } from "../utils/mapRoute";
 
 export default function Main() {
   const router = useRouter();
-  const [geoInput, setGeoInput] = useState("");
   const [geoInputError, setGeoInputError] = useState<string | null>(null);
+  const [searchValue, setSearchValue] = useState("");
 
-  const openMapWithInput = useCallback(() => {
-    const parsedCoordinates = parseGeoInput(geoInput);
-    if (!parsedCoordinates) {
-      setGeoInputError("Enter coordinates as latitude, longitude.");
-      return;
-    }
+  const openMapWithInput = useCallback(
+    (searchValue: string) => {
+      const parsedCoordinates = parseGeoInput(searchValue);
+      if (!parsedCoordinates) {
+        setGeoInputError("Enter coordinates as latitude, longitude.");
+        return;
+      }
 
-    setGeoInputError(null);
-    router.push(buildMapRoute(parsedCoordinates));
-  }, [geoInput, router]);
+      setGeoInputError(null);
+      router.push(buildMapRoute(parsedCoordinates));
+    },
+    [router],
+  );
 
   const openMapDirectly = useCallback(() => {
     setGeoInputError(null);
@@ -39,8 +42,8 @@ export default function Main() {
 
         <div className="mt-6">
           <SearchBar
-            value={geoInput}
-            onChangeValue={setGeoInput}
+            searchValue={searchValue}
+            onChangeValue={setSearchValue}
             onEnter={openMapWithInput}
             placeholder="Enter latitude, longitude (e.g. 1.3521, 103.8198)"
           />
@@ -52,7 +55,7 @@ export default function Main() {
         <button
           type="button"
           className="mt-4 w-full rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-900 hover:bg-emerald-400"
-          onClick={openMapWithInput}
+          onClick={() => openMapWithInput(searchValue)}
         >
           Open map with this location
         </button>

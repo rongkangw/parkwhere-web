@@ -6,8 +6,12 @@ import BikeParkingPopup from "@/components/map/ParkingDetailPopup";
 
 import {
   INITIAL_ZOOM,
+  MAX_LAT,
+  MAX_LNG,
   MAP_LAYER_ID,
   MAP_SOURCE_ID,
+  MIN_LAT,
+  MIN_LNG,
 } from "@/core/constants/map/MapConstants";
 import { mapStyle } from "@/core/constants/map/mapstyle/OnemapStyle";
 import useMapViewModel from "@/viewmodels/MapViewModel";
@@ -19,12 +23,10 @@ type MapViewProps = {
 export default function MapView({ vm }: MapViewProps) {
   const {
     mapRef,
-    cameraLatitude,
-    cameraLongitude,
+    queryLocation,
     tileGeoJson,
     parkingGeoJson,
     selectedRack,
-    handleMapLoad,
     handleMoveEnd,
     handleMarkerClick,
     handlePopupClose,
@@ -35,14 +37,17 @@ export default function MapView({ vm }: MapViewProps) {
       <Map
         ref={mapRef}
         initialViewState={{
-          latitude: cameraLatitude,
-          longitude: cameraLongitude,
+          latitude: queryLocation.latitude,
+          longitude: queryLocation.longitude,
           zoom: INITIAL_ZOOM,
         }}
         style={{ width: "100%", height: "100%" }}
         mapStyle={mapStyle}
+        maxBounds={[
+          [MIN_LNG, MIN_LAT],
+          [MAX_LNG, MAX_LAT],
+        ]}
         interactiveLayerIds={[MAP_LAYER_ID]}
-        onLoad={handleMapLoad}
         onMoveEnd={handleMoveEnd}
         onClick={handleMarkerClick}
       >

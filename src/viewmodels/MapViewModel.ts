@@ -2,38 +2,60 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { MapLayerMouseEvent, MapRef } from "react-map-gl/maplibre";
+import parseGeoInput from "@/app/utils/parseGeoInput";
+import getTileId from "@/app/utils/getTileId";
 import toGeoJson from "@/app/utils/toGeoJson";
 import generateCityTileOverlay from "@/app/utils/getTilesForBounds";
 import ParkingSpot from "@/core/constants/ParkingSpot";
+import useParkingSpots from "@/hooks/useParkingSpots";
+import usePersistParkingSpots from "@/hooks/usePersistParkingSpots";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
   FOCUS_DURATION,
-  FOCUS_ZOOM,
   MAP_LAYER_ID,
 } from "@/core/constants/map/MapConstants";
 
 type UseMapViewModelArgs = {
-  racks: ParkingSpot[];
-  fetchedTileIds: Set<string>;
-  initialCameraLatitude?: number;
-  initialCameraLongitude?: number;
-  onCameraMove: (latitude: number, longitude: number) => void;
+  initialQueryLocation?: {
+    latitude: number;
+    longitude: number;
+  };
 };
 
 export default function useMapViewModel({
-  racks,
-  fetchedTileIds,
-  initialCameraLatitude = DEFAULT_LATITUDE,
-  initialCameraLongitude = DEFAULT_LONGITUDE,
-  onCameraMove,
-}: UseMapViewModelArgs) {
-  const mapRef = useRef<MapRef | null>(null);
-  const [cameraLatitude, setCameraLatitude] = useState(initialCameraLatitude);
-  const [cameraLongitude, setCameraLongitude] = useState(
-    initialCameraLongitude,
+  initialQueryLocation,
+}: UseMapViewModelArgs = {}) {
+  const searchResults: string[] = [];
+  const [queryLocation, setQueryLocation] = useState(
+    initialQueryLocation ?? {
+      latitude: DEFAULT_LATITUDE,
+      longitude: DEFAULT_LONGITUDE,
+    },
   );
+  const queryTile = useRef<string>(
+    getTileId(queryLocation.latitude, queryLocation.longitude),
+  );
+  const mapRef = useRef<MapRef | null>(null);
   const [selectedRackId, setSelectedRackId] = useState<string | null>(null);
+
+  const {
+    data,
+    error,
+    isError,
+    isLoading,
+    shouldFetchOnlineRacks,
+    fetchedTileIds,
+  } = useParkingSpots(queryLocation.latitude, queryLocation.longitude);
+
+  const racks: ParkingSpot[] = useMemo(() => data ?? [], [data]);
+
+  usePersistParkingSpots({
+    lat: queryLocation.latitude,
+    lng: queryLocation.longitude,
+    spots: data,
+    shouldPersist: shouldFetchOnlineRacks && !!data,
+  });
 
   const parkingGeoJson = useMemo(() => toGeoJson(racks), [racks]);
   const tileGeoJson = useMemo(
@@ -45,44 +67,82 @@ export default function useMapViewModel({
     [racks, selectedRackId],
   );
 
-  const setCameraPosition = useCallback(
+  const handleCameraMove = useCallback(
     (latitude: number, longitude: number) => {
-      setCameraLatitude(latitude);
-      setCameraLongitude(longitude);
+      const nextTile = getTileId(latitude, longitude);
+      if (queryTile.current === nextTile) {
+        return;
+      }
+
+      queryTile.current = nextTile;
+      setQueryLocation({ latitude, longitude });
     },
-    [],
+    [setQueryLocation],
   );
 
-  const focusOnCoordinates = useCallback(
+  const runMapSearch = useCallback(
+    (query: string) => {
+      const parsedCoordinates = parseGeoInput(query);
+      if (!parsedCoordinates) {
+        return null;
+      }
+
+      queryTile.current = getTileId(
+        parsedCoordinates.latitude,
+        parsedCoordinates.longitude,
+      );
+      setQueryLocation(parsedCoordinates);
+      return parsedCoordinates;
+    },
+    [setQueryLocation],
+  );
+
+  const handleMoveToCoordinates = useCallback(
     (latitude: number, longitude: number) => {
-      setCameraPosition(latitude, longitude);
       mapRef.current?.flyTo({
         center: [longitude, latitude],
-        zoom: FOCUS_ZOOM,
         duration: FOCUS_DURATION,
         essential: true,
       });
     },
-    [setCameraPosition],
+    [],
+  );
+
+  const handleMapSearch = useCallback(
+    (query: string) => {
+      const parsedCoordinates = runMapSearch(query);
+      if (!parsedCoordinates) {
+        return false;
+      }
+
+      handleMoveToCoordinates(
+        parsedCoordinates.latitude,
+        parsedCoordinates.longitude,
+      );
+      return true;
+    },
+    [handleMoveToCoordinates, runMapSearch],
   );
 
   const handleMarkerClick = useCallback(
     (event: MapLayerMouseEvent) => {
+      // only trigger when clicking on rack marker
       const clickedFeature = event.features?.find(
         (feature) => feature.layer.id === MAP_LAYER_ID,
       );
-
       if (!clickedFeature) return;
 
+      // search for clicked rack
       const rack = racks.find(
         (item) => item.id === String(clickedFeature.properties?.id),
       );
       if (!rack) return;
 
+      // move camera to rack and open popup
       setSelectedRackId(rack.id);
-      focusOnCoordinates(rack.lat, rack.lng);
+      handleMoveToCoordinates(rack.lat, rack.lng);
     },
-    [focusOnCoordinates, racks],
+    [handleMoveToCoordinates, racks],
   );
 
   const handlePopupClose = useCallback(() => {
@@ -92,26 +152,27 @@ export default function useMapViewModel({
   const handleMoveEnd = useCallback(
     (event: { viewState: { latitude: number; longitude: number } }) => {
       const { latitude, longitude } = event.viewState;
-      setCameraPosition(latitude, longitude);
-      onCameraMove(latitude, longitude);
+      handleCameraMove(latitude, longitude);
     },
-    [onCameraMove, setCameraPosition],
+    [handleCameraMove],
   );
 
-  const handleMapLoad = useCallback(() => {
-    focusOnCoordinates(initialCameraLatitude, initialCameraLongitude);
-  }, [focusOnCoordinates, initialCameraLatitude, initialCameraLongitude]);
-
   return {
+    racks,
+    fetchedTileIds,
+    isLoading,
+    isError,
+    error,
+    queryLocation,
+    setQueryLocation,
+    runMapSearch,
+    handleMapSearch,
+    searchResults,
     mapRef,
-    cameraLatitude,
-    cameraLongitude,
     selectedRack,
     tileGeoJson,
     parkingGeoJson,
-    setCameraPosition,
-    focusOnCoordinates,
-    handleMapLoad,
+    focusOnCoordinates: handleMoveToCoordinates,
     handleMoveEnd,
     handleMarkerClick,
     handlePopupClose,

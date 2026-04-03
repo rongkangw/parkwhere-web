@@ -1,3 +1,10 @@
+import {
+  MAX_LAT,
+  MAX_LNG,
+  MIN_LAT,
+  MIN_LNG,
+} from "@/core/constants/map/MapConstants";
+
 export default function parseGeoInput(
   rawValue: string,
 ): { latitude: number; longitude: number } | null {
@@ -8,8 +15,8 @@ export default function parseGeoInput(
   const longitude = Number(lngText);
 
   if (Number.isNaN(latitude) || Number.isNaN(longitude)) return null;
-  if (latitude < -90 || latitude > 90) return null;
-  if (longitude < -180 || longitude > 180) return null;
+  if (latitude < MIN_LAT || latitude > MAX_LAT) return null;
+  if (longitude < MIN_LNG || longitude > MAX_LNG) return null;
 
   return { latitude, longitude };
 }

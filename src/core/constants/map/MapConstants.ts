@@ -8,9 +8,9 @@ export const MIN_LNG = 103.6;
 export const MAX_LNG = 104.04;
 export const MIN_LAT = 1.2;
 export const MAX_LAT = 1.48;
+export const SINGAPORE_BOUNDS_HINT = `Only coordinates within Singapore are allowed (Lat ${MIN_LAT} - ${MAX_LAT}, Lng ${MIN_LNG} - ${MAX_LNG}).`;
 
 export const INITIAL_ZOOM = 13;
-export const FOCUS_ZOOM = 14;
 export const FOCUS_DURATION = 700;
 
 export const QUERY_COORDINATE_PRECISION = 3;

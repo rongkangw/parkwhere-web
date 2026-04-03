@@ -1,16 +1,32 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { Suspense, useCallback, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import MapErrorPopup from "@/components/map/MapErrorPopup";
 import MapView from "@/components/map/MapView";
+import BackButton from "@/components/ui/BackButton";
+import LatLngIndicator from "@/components/ui/LatLngIndicator";
 import SearchBar from "@/components/ui/SearchBar";
-import useMainViewModel from "@/viewmodels/MainViewModel";
 import useMapViewModel from "@/viewmodels/MapViewModel";
 import { buildHomeRoute } from "@/app/utils/mapRoute";
 import parseGeoInput from "@/app/utils/parseGeoInput";
+import { SINGAPORE_BOUNDS_HINT } from "@/core/constants/map/MapConstants";
 
 export default function MapPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="pointer-events-none fixed top-20 left-1/2 z-20 -translate-x-1/2">
+          <MapErrorPopup message={"Loading map..."} variant="loading" />
+        </div>
+      }
+    >
+      <MapPageContent />
+    </Suspense>
+  );
+}
+
+function MapPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -22,75 +38,74 @@ export default function MapPage() {
     return parseGeoInput(`${latParam},${lngParam}`);
   }, [searchParams]);
 
-  const mainVM = useMainViewModel({
+  const mapVM = useMapViewModel({
     initialQueryLocation: initialCoordinates ?? undefined,
   });
-  const [mapSearchInput, setMapSearchInput] = useState("");
-  const {
-    racks,
-    fetchedTileIds,
-    queryLatitude,
-    queryLongitude,
-    handleCameraMove,
-    runMapSearch,
-  } = mainVM;
 
-  const mapVM = useMapViewModel({
-    racks,
-    fetchedTileIds,
-    initialCameraLatitude: queryLatitude,
-    initialCameraLongitude: queryLongitude,
-    onCameraMove: handleCameraMove,
-  });
+  const [searchInputError, setSearchInputError] = useState<string | null>(null);
+  const { queryLocation, isLoading, isError, error, handleMapSearch } = mapVM;
 
   const handleBackToHome = useCallback(() => {
     router.push(buildHomeRoute());
   }, [router]);
 
-  const handleMapSearch = useCallback(() => {
-    const parsedCoordinates = runMapSearch(mapSearchInput);
-    if (!parsedCoordinates) return;
+  const handleSearch = useCallback(
+    (searchValue: string) => {
+      const isSearchValid = handleMapSearch(searchValue);
+      if (!isSearchValid) {
+        setSearchInputError(SINGAPORE_BOUNDS_HINT);
+        return;
+      }
 
-    mapVM.focusOnCoordinates(
-      parsedCoordinates.latitude,
-      parsedCoordinates.longitude,
-    );
-  }, [mapSearchInput, mapVM, runMapSearch]);
+      setSearchInputError(null);
+    },
+    [handleMapSearch],
+  );
 
   return (
     <main className="h-screen w-screen">
-      <div className="pointer-events-none fixed top-5 left-1/2 z-20 flex w-[min(92vw,52rem)] -translate-x-1/2 items-center gap-2">
-        <button
-          type="button"
-          onClick={handleBackToHome}
-          className="pointer-events-auto h-12 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-100"
-        >
-          Back
-        </button>
-        <div className="pointer-events-auto flex-1">
-          <SearchBar
-            value={mapSearchInput}
-            onChangeValue={setMapSearchInput}
-            onEnter={handleMapSearch}
-            placeholder="Find another place to search"
-          />
+      <div className="fixed top-4 z-20 w-full">
+        <div className="relative flex w-full items-center px-2">
+          <div className="mr-auto">
+            <BackButton onClick={handleBackToHome} />
+          </div>
+
+          <div className="pointer-events-auto absolute left-1/2 w-[60vw] max-w-[60vw] min-w-56 -translate-x-1/2">
+            <SearchBar
+              onEnter={handleSearch}
+              placeholder="Jump to a location..."
+            />
+          </div>
         </div>
+
+        {(isLoading || (isError && error) || searchInputError) && (
+          <div className="mt-2 flex w-full justify-center">
+            <div className="space-y-2">
+              {isLoading && (
+                <MapErrorPopup
+                  message={"Loading bike parking data..."}
+                  variant="loading"
+                />
+              )}
+              {isError && error && (
+                <MapErrorPopup message={error.message} variant="error" />
+              )}
+              {searchInputError && (
+                <MapErrorPopup message={searchInputError} variant="error" />
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="pointer-events-none fixed top-5 right-5 z-20 rounded-lg border border-slate-300 bg-white/95 px-3 py-2 font-mono text-xs text-slate-700 shadow-sm">
-        lat: {queryLatitude.toFixed(6)} | lng: {queryLongitude.toFixed(6)}
+      <div className="pointer-events-none fixed right-4 bottom-4 z-20">
+        <LatLngIndicator
+          latitude={queryLocation.latitude}
+          longitude={queryLocation.longitude}
+        />
       </div>
 
       <MapView vm={mapVM} />
-      {mainVM.isLoading && (
-        <MapErrorPopup
-          message={"Loading bike parking data..."}
-          variant="loading"
-        />
-      )}
-      {mainVM.isError && mainVM.error && (
-        <MapErrorPopup message={mainVM.error.message} variant="error" />
-      )}
     </main>
   );
 }

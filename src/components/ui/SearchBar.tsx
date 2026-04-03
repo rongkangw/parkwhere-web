@@ -1,21 +1,23 @@
+import { useState } from "react";
+
 type SearchBarProps = {
-  value: string;
-  onChangeValue: (value: string) => void;
   placeholder?: string;
-  onEnter?: () => void;
-  className?: string;
+  searchValue?: string;
+  onChangeValue?: (value: string) => void;
+  onEnter: (searchValue: string) => void;
 };
 
 export default function SearchBar({
-  value,
-  onChangeValue,
   placeholder = "Search",
+  searchValue = "",
+  onChangeValue = () => {},
   onEnter,
-  className = "",
 }: SearchBarProps) {
+  const [searchInput, setSearchInput] = useState(searchValue);
+
   return (
     <div
-      className={`flex h-12 w-full rounded-lg border border-slate-300 bg-white text-slate-900 shadow-sm ${className}`}
+      className={`flex h-12 w-full rounded-lg border border-slate-300 bg-white text-slate-900 shadow-sm`}
     >
       <div className="w-full px-4 py-2">
         <label htmlFor="parking-search" className="sr-only">
@@ -24,11 +26,14 @@ export default function SearchBar({
         <input
           id="parking-search"
           type="text"
-          value={value}
-          onChange={(event) => onChangeValue(event.target.value)}
+          value={searchInput}
+          onChange={(event) => {
+            setSearchInput(event.target.value);
+            onChangeValue(event.target.value);
+          }}
           onKeyDown={(event) => {
             if (event.key === "Enter") {
-              onEnter?.();
+              onEnter(searchInput);
             }
           }}
           placeholder={placeholder}
