@@ -18,6 +18,10 @@ export const STORAGE_COORDINATE_PRECISION = 6;
 
 export const MAP_SOURCE_ID = "bike-parking-source";
 export const MAP_LAYER_ID = "bike-parking-layer";
+export const MAP_CLUSTER_LAYER_ID = "bike-parking-cluster-layer";
+export const MAP_CLUSTER_COUNT_LAYER_ID = "bike-parking-cluster-count-layer";
+export const MAP_CLUSTER_MAX_ZOOM = 15;
+export const MAP_CLUSTER_RADIUS = 48;
 
 export const POPUP_ANCHOR = "left" as const;
 export const POPUP_OFFSET = 12;

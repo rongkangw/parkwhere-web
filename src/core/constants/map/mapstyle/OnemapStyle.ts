@@ -9,6 +9,8 @@ export const mapStyle: StyleSpecification = {
         "https://www.onemap.gov.sg/maps/tiles/Default_HD/{z}/{x}/{y}.png",
       ],
       tileSize: 256,
+      maxzoom: 19,
+      minzoom: 11,
     },
   },
   layers: [

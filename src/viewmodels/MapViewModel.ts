@@ -2,18 +2,20 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { MapLayerMouseEvent, MapRef } from "react-map-gl/maplibre";
+import type { GeoJSONSource } from "maplibre-gl";
 import parseGeoInput from "@/app/utils/parseGeoInput";
 import getTileId from "@/app/utils/getTileId";
 import toGeoJson from "@/app/utils/toGeoJson";
-import generateCityTileOverlay from "@/app/utils/getTilesForBounds";
+import generateTileOverlay from "@/app/utils/generateTileOverlay";
 import ParkingSpot from "@/core/constants/ParkingSpot";
 import useParkingSpots from "@/hooks/useParkingSpots";
-import usePersistParkingSpots from "@/hooks/usePersistParkingSpots";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
   FOCUS_DURATION,
+  MAP_CLUSTER_LAYER_ID,
   MAP_LAYER_ID,
+  MAP_SOURCE_ID,
 } from "@/core/constants/map/MapConstants";
 
 type UseMapViewModelArgs = {
@@ -40,23 +42,12 @@ export default function useMapViewModel({
   const [selectedRackId, setSelectedRackId] = useState<string | null>(null);
   const [tileOverlayEnabled, setTileOverlayEnabled] = useState(false);
 
-  const {
-    data,
-    error,
-    isError,
-    isLoading,
-    shouldFetchOnlineRacks,
-    fetchedTileIds,
-  } = useParkingSpots(queryLocation.latitude, queryLocation.longitude);
+  const { data, error, isError, isLoading, fetchedTileIds } = useParkingSpots(
+    queryLocation.latitude,
+    queryLocation.longitude,
+  );
 
   const racks: ParkingSpot[] = useMemo(() => data ?? [], [data]);
-
-  usePersistParkingSpots({
-    lat: queryLocation.latitude,
-    lng: queryLocation.longitude,
-    spots: data,
-    shouldPersist: shouldFetchOnlineRacks && !!data,
-  });
 
   const parkingGeoJson = useMemo(() => toGeoJson(racks), [racks]);
   const tileGeoJson = useMemo(
@@ -100,9 +91,10 @@ export default function useMapViewModel({
   );
 
   const handleMoveToCoordinates = useCallback(
-    (latitude: number, longitude: number) => {
+    (latitude: number, longitude: number, zoom?: number) => {
       mapRef.current?.flyTo({
         center: [longitude, latitude],
+        zoom,
         duration: FOCUS_DURATION,
         essential: true,
       });
@@ -126,25 +118,61 @@ export default function useMapViewModel({
     [handleMoveToCoordinates, runMapSearch],
   );
 
+  const handleClusterClick = useCallback(
+    (event: MapLayerMouseEvent) => {
+      const clusterFeature = event.features?.find(
+        (feature) => feature.layer.id === MAP_CLUSTER_LAYER_ID,
+      );
+      if (!clusterFeature) return false;
+
+      const clusterId = Number(clusterFeature.properties?.cluster_id);
+      const source = mapRef.current?.getSource(MAP_SOURCE_ID) as
+        | GeoJSONSource
+        | undefined;
+      if (!source || Number.isNaN(clusterId)) return false;
+
+      // move camera to cluster and zoom
+      const [clusterLng, clusterLat] = event.lngLat.toArray();
+      setSelectedRackId(null);
+
+      source.getClusterExpansionZoom(clusterId).then((zoom) => {
+        if (zoom == null) return;
+        handleMoveToCoordinates(clusterLat, clusterLng, zoom);
+      });
+
+      return true;
+    },
+    [handleMoveToCoordinates],
+  );
+
   const handleMarkerClick = useCallback(
     (event: MapLayerMouseEvent) => {
-      // only trigger when clicking on rack marker
+      // check if individual marker was clicked
       const clickedFeature = event.features?.find(
         (feature) => feature.layer.id === MAP_LAYER_ID,
       );
-      if (!clickedFeature) return;
+      if (!clickedFeature) return false;
 
       // search for clicked rack
       const rack = racks.find(
         (item) => item.id === String(clickedFeature.properties?.id),
       );
-      if (!rack) return;
+      if (!rack) return false;
 
       // move camera to rack and open popup
       setSelectedRackId(rack.id);
       handleMoveToCoordinates(rack.lat, rack.lng);
+      return true;
     },
     [handleMoveToCoordinates, racks],
+  );
+
+  const handleMapClick = useCallback(
+    (event: MapLayerMouseEvent) => {
+      if (handleClusterClick(event)) return;
+      handleMarkerClick(event);
+    },
+    [handleClusterClick, handleMarkerClick],
   );
 
   const handlePopupClose = useCallback(() => {
@@ -180,9 +208,8 @@ export default function useMapViewModel({
     handleTileOverlayToggle,
     tileGeoJson,
     parkingGeoJson,
-    focusOnCoordinates: handleMoveToCoordinates,
     handleMoveEnd,
-    handleMarkerClick,
+    handleMarkerClick: handleMapClick,
     handlePopupClose,
   };
 }

@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQueries } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef } from "react";
 import {
   DEFAULT_QUERY_DISTANCE,
@@ -9,6 +9,19 @@ import fetchDbSpots from "@/modules/db/fetchDbSpots";
 import ParkingSpot from "@/core/constants/ParkingSpot";
 import getTileId from "@/app/utils/getTileId";
 import fetchTileStatus from "@/modules/db/fetchTileStatus";
+import getAdjacentTileIds from "@/app/utils/getAdjacentTileIds";
+import MapTileResponse from "@/core/constants/map/MapTileResponse";
+import { getTileCenter } from "@/app/utils/getTileCenter";
+import MapTile from "../core/constants/map/MapTile";
+import updateDbSpots from "@/modules/db/updateDbSpots";
+
+type TileStatusQueryResponse = {
+  data?: MapTileResponse;
+  isError?: boolean;
+  isSuccess?: boolean;
+  isLoading?: boolean;
+  error?: unknown;
+};
 
 export default function useParkingSpots(
   lat: number,
@@ -16,104 +29,184 @@ export default function useParkingSpots(
   dist: number = DEFAULT_QUERY_DISTANCE,
   currentTime: Date = new Date(),
 ) {
+  const persistedTileSignaturesRef = useRef(new Set<string>());
+
+  // 1) Get current tile id and adjacent tile ids from map position.
   const tile = getTileId(lat, lng);
-  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-  const fetchedTileIdsRef = useRef<Set<string>>(new Set());
+  const tileIds = useMemo(() => getAdjacentTileIds(tile), [tile]);
 
-  console.log("checking tile status for tile:", tile);
-
-  const tileStatus = useQuery({
-    queryKey: ["tileStatus", tile],
-    queryFn: () => fetchTileStatus(tile),
-    enabled: !!tile,
-    staleTime: 10 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: false,
+  // 2) Fetch tile status for each tile id.
+  const tilesStatusQueries = useQueries({
+    queries: tileIds.map((tileId) => ({
+      queryKey: ["tileStatus", tileId],
+      queryFn: async () => {
+        try {
+          return await fetchTileStatus(tileId);
+        } catch (error) {
+          console.warn(
+            `Tile ${tileId} status check failed. Proceeding with online fetch. Error: ${error}`,
+          );
+          throw error;
+        }
+      },
+      enabled: !!tileId,
+      staleTime: 10 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
+      refetchOnWindowFocus: false,
+    })),
   });
 
-  useEffect(() => {
-    if (!tileStatus.isError) return;
+  // 3) Decide per tile whether to fetch online or DB spots.
+  const tileQueryContexts = useMemo<MapTile[]>(() => {
+    const nowMs = currentTime.getTime();
+    const oneDayMs = 24 * 60 * 60 * 1000;
 
-    console.warn(
-      `Tile ${tile} status check failed. Proceeding with online fetch. Error: ${tileStatus.error}`,
-    );
-  }, [tile, tileStatus.error, tileStatus.isError]);
+    return tileIds.map((tileId, index) => {
+      const { lat: tileLat, lng: tileLng } = getTileCenter(tileId);
+      const tileStatusQuery = tilesStatusQueries[index] as
+        | TileStatusQueryResponse
+        | undefined;
 
-  const shouldFetchOnlineRacks = useMemo(() => {
-    if (tileStatus.isError || !tileStatus.data) {
-      console.warn(`Tile status unavailable. Proceeding with online fetch.`);
-      return true;
-    }
+      const tileStatus = tileStatusQuery?.data;
+      const shouldPersist =
+        tileStatusQuery?.isError ||
+        !tileStatus ||
+        !tileStatus.fetched ||
+        tileStatus.lastFetched == null ||
+        nowMs - tileStatus.lastFetched.getTime() > oneDayMs;
 
-    const { fetched, lastFetched } = tileStatus.data;
+      return {
+        tileId,
+        lat: tileLat,
+        lng: tileLng,
+        shouldPersist,
+      };
+    });
+  }, [currentTime, tileIds, tilesStatusQueries]);
 
-    if (!fetched) return true;
-    if (lastFetched == null) return true;
+  // 3) Continue: fetch online if stale/missing/error, otherwise fetch DB spots.
+  const parkingSpotsQueries = useQueries({
+    queries: tileQueryContexts.map((context, index) => {
+      const { tileId, lat: tileLat, lng: tileLng, shouldPersist } = context;
 
-    const now = currentTime.getTime();
-    const lastFetchedMs = new Date(lastFetched).getTime();
+      return {
+        queryKey: ["bikeParking", tileId, dist, shouldPersist],
+        queryFn: async () => {
+          try {
+            if (shouldPersist) {
+              return await fetchOnlineSpots(tileLat, tileLng, dist);
+            }
 
-    console.log(
-      (now - lastFetchedMs) / (1000 * 60),
-      "mins since last fetch for tile, stale if >",
-      ONE_DAY_MS / (1000 * 60),
-      "mins",
-    );
-
-    return now - lastFetchedMs > ONE_DAY_MS;
-  }, [ONE_DAY_MS, currentTime, tileStatus.data, tileStatus.isError]);
-
-  const spotsQuery = useQuery<ParkingSpot[], Error>({
-    queryKey: [
-      "bikeParking",
-      tile,
-      dist,
-      shouldFetchOnlineRacks ? 1 : 0, // to differentiate cache for online vs db fetch
-    ],
-    queryFn: () =>
-      shouldFetchOnlineRacks
-        ? fetchOnlineSpots(lat, lng, dist)
-        : fetchDbSpots(lat, lng, DEFAULT_QUERY_DISTANCE_METERS),
-    enabled: !!tile && (tileStatus.isSuccess || tileStatus.isError),
-    retry: 3,
-    retryDelay: (attemptCount) => {
-      return Math.min(1000 * attemptCount, 10000); // max delay 10s as safeguard
-    },
-    staleTime: Infinity,
-    gcTime: 30 * 60 * 1000,
-    placeholderData: keepPreviousData,
-    refetchOnWindowFocus: false,
+            return await fetchDbSpots(
+              tileLat,
+              tileLng,
+              DEFAULT_QUERY_DISTANCE_METERS,
+            );
+          } catch (error) {
+            console.warn(
+              `Spots query failed for tile ${tileId}. Error: ${error}`,
+            );
+            throw error;
+          }
+        },
+        enabled:
+          !!tileId &&
+          (tilesStatusQueries[index]?.isSuccess ||
+            tilesStatusQueries[index]?.isError),
+        retry: 3,
+        retryDelay: (attemptCount: number) => {
+          return Math.min(1000 * attemptCount, 10000); // max delay 10s as safeguard
+        },
+        staleTime: Infinity,
+        gcTime: 30 * 60 * 1000,
+        placeholderData: keepPreviousData,
+        refetchOnWindowFocus: false,
+      };
+    }),
   });
 
+  // Keep tile-grouped spot results as the primary shape.
+  const tileFetchEntriesWithSpots = useMemo<MapTile[]>(() => {
+    return tileQueryContexts.map((context, index) => {
+      const { tileId, lat, lng, shouldPersist } = context;
+      return {
+        tileId,
+        lat,
+        lng,
+        shouldPersist,
+        spots: parkingSpotsQueries[index]?.data,
+      };
+    });
+  }, [parkingSpotsQueries, tileQueryContexts]);
+
+  // 4) Persist online-fetched tiles back into DB.
   useEffect(() => {
-    if (!spotsQuery.isError) return;
+    const persistTile = async (tileEntry: MapTile) => {
+      if (
+        !tileEntry.shouldPersist ||
+        !tileEntry.spots ||
+        tileEntry.spots.length === 0
+      ) {
+        return;
+      }
 
-    console.warn(
-      `Spots query failed for tile ${tile} (${lat}, ${lng}). Error: ${spotsQuery.error}`,
-    );
-  }, [lat, lng, spotsQuery.error, spotsQuery.isError, tile]);
+      const { tileId, lat, lng, spots } = tileEntry;
+      const signature = `${tileId}:${spots.map((spot) => spot.id).join(",")}`;
+      if (persistedTileSignaturesRef.current.has(signature)) return;
 
-  const isTileFetched = tileStatus.data?.fetched === true;
+      try {
+        await updateDbSpots(tileId, lat, lng, spots);
+        persistedTileSignaturesRef.current.add(signature);
+      } catch (error) {
+        console.warn(
+          `Failed to persist online spots for tile ${tileId}. Error: ${error}`,
+        );
+      }
+    };
 
-  if (tile && tileStatus.isSuccess) {
-    if (isTileFetched) {
-      fetchedTileIdsRef.current.add(tile);
-    } else {
-      fetchedTileIdsRef.current.delete(tile);
-    }
-  }
+    if (tileFetchEntriesWithSpots.length === 0) return;
 
-  const fetchedTileIds = new Set(fetchedTileIdsRef.current);
+    void Promise.all(tileFetchEntriesWithSpots.map(persistTile));
+  }, [tileFetchEntriesWithSpots]);
+
+  // 5) Merge all tile spots into one deduplicated list for rendering.
+  const spots = useMemo(() => {
+    const dedupedSpots = new Map<string, ParkingSpot>();
+
+    tileFetchEntriesWithSpots.forEach((entry) => {
+      entry.spots?.forEach((spot) => {
+        dedupedSpots.set(spot.id, spot);
+      });
+    });
+
+    return Array.from(dedupedSpots.values());
+  }, [tileFetchEntriesWithSpots]);
+
+  const fetchedTileIds = useMemo(() => {
+    const fetched = new Set<string>();
+
+    tilesStatusQueries.forEach((tileStatusQuery, index) => {
+      if (tileStatusQuery.data?.fetched) {
+        fetched.add(tileIds[index]);
+      }
+    });
+
+    return fetched;
+  }, [tileIds, tilesStatusQueries]);
 
   return {
-    data: spotsQuery.data,
-    error: spotsQuery.error,
-    isError: spotsQuery.isError,
-    isLoading: spotsQuery.isLoading,
-    shouldFetchOnlineRacks,
+    data: spots,
+    error: parkingSpotsQueries.find((query) => query.isError)?.error,
+    isError: parkingSpotsQueries.some((query) => query.isError),
+    isLoading:
+      tilesStatusQueries.some((query) => query.isLoading) ||
+      parkingSpotsQueries.some((query) => query.isLoading),
     currentTile: tile,
-    isTileStatusResolved: tileStatus.isSuccess,
-    isTileFetched,
+    isTileStatusResolved: tilesStatusQueries.every(
+      (query) => query.isSuccess || query.isError,
+    ),
+    isTileFetched: fetchedTileIds.has(tile),
     fetchedTileIds,
+    tileFetchEntries: tileFetchEntriesWithSpots,
   };
 }

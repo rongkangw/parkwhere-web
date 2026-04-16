@@ -1,11 +1,20 @@
 "use client";
 
 import Map, { Layer, Source } from "react-map-gl/maplibre";
-import { bikeParkingLayerPaint } from "@/app/utils/mapMarkerLayerStyle";
+import {
+  bikeParkingClusterCountLayout,
+  bikeParkingClusterCountPaint,
+  bikeParkingClusterLayerPaint,
+  bikeParkingLayerPaint,
+} from "@/app/utils/mapMarkerLayerStyle";
 import BikeParkingPopup from "@/components/map/ParkingDetailPopup";
 
 import {
   INITIAL_ZOOM,
+  MAP_CLUSTER_COUNT_LAYER_ID,
+  MAP_CLUSTER_LAYER_ID,
+  MAP_CLUSTER_MAX_ZOOM,
+  MAP_CLUSTER_RADIUS,
   MAX_LAT,
   MAX_LNG,
   MAP_LAYER_ID,
@@ -48,7 +57,7 @@ export default function MapView({ vm }: MapViewProps) {
           [MIN_LNG, MIN_LAT],
           [MAX_LNG, MAX_LAT],
         ]}
-        interactiveLayerIds={[MAP_LAYER_ID]}
+        interactiveLayerIds={[MAP_LAYER_ID, MAP_CLUSTER_LAYER_ID]}
         onMoveEnd={handleMoveEnd}
         onClick={handleMarkerClick}
       >
@@ -79,10 +88,31 @@ export default function MapView({ vm }: MapViewProps) {
         )}
 
         {parkingGeoJson.features.length > 0 && (
-          <Source id={MAP_SOURCE_ID} type="geojson" data={parkingGeoJson}>
+          <Source
+            id={MAP_SOURCE_ID}
+            type="geojson"
+            data={parkingGeoJson}
+            cluster
+            clusterMaxZoom={MAP_CLUSTER_MAX_ZOOM}
+            clusterRadius={MAP_CLUSTER_RADIUS}
+          >
+            <Layer
+              id={MAP_CLUSTER_LAYER_ID}
+              type="circle"
+              filter={["has", "point_count"]}
+              paint={bikeParkingClusterLayerPaint}
+            />
+            <Layer
+              id={MAP_CLUSTER_COUNT_LAYER_ID}
+              type="symbol"
+              filter={["has", "point_count"]}
+              layout={bikeParkingClusterCountLayout}
+              paint={bikeParkingClusterCountPaint}
+            />
             <Layer
               id={MAP_LAYER_ID}
               type="circle"
+              filter={["!", ["has", "point_count"]]}
               paint={bikeParkingLayerPaint}
             />
           </Source>
