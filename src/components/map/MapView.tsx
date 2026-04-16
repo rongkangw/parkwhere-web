@@ -27,6 +27,7 @@ export default function MapView({ vm }: MapViewProps) {
     tileGeoJson,
     parkingGeoJson,
     selectedRack,
+    tileOverlayEnabled,
     handleMoveEnd,
     handleMarkerClick,
     handlePopupClose,
@@ -51,7 +52,7 @@ export default function MapView({ vm }: MapViewProps) {
         onMoveEnd={handleMoveEnd}
         onClick={handleMarkerClick}
       >
-        {tileGeoJson && (
+        {tileGeoJson && tileOverlayEnabled && (
           <Source id="tiles" type="geojson" data={tileGeoJson}>
             <Layer
               id="tiles-fill"

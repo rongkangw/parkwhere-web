@@ -11,6 +11,7 @@ import useMapViewModel from "@/viewmodels/MapViewModel";
 import { buildHomeRoute } from "@/app/utils/mapRoute";
 import parseGeoInput from "@/app/utils/parseGeoInput";
 import { SINGAPORE_BOUNDS_HINT } from "@/core/constants/map/MapConstants";
+import SettingsMenu from "@/components/ui/SettingsMenu";
 
 export default function MapPage() {
   return (
@@ -43,7 +44,15 @@ function MapPageContent() {
   });
 
   const [searchInputError, setSearchInputError] = useState<string | null>(null);
-  const { queryLocation, isLoading, isError, error, handleMapSearch } = mapVM;
+  const {
+    queryLocation,
+    isLoading,
+    isError,
+    error,
+    handleMapSearch,
+    tileOverlayEnabled,
+    handleTileOverlayToggle,
+  } = mapVM;
 
   const handleBackToHome = useCallback(() => {
     router.push(buildHomeRoute());
@@ -98,11 +107,17 @@ function MapPageContent() {
         )}
       </div>
 
-      <div className="pointer-events-none fixed right-4 bottom-4 z-20">
-        <LatLngIndicator
-          latitude={queryLocation.latitude}
-          longitude={queryLocation.longitude}
-        />
+      <div className="fixed right-4 bottom-4 z-20">
+        <div className="flex items-end gap-2">
+          <LatLngIndicator
+            latitude={queryLocation.latitude}
+            longitude={queryLocation.longitude}
+          />
+          <SettingsMenu
+            tileOverlayEnabled={tileOverlayEnabled}
+            onTileOverlayToggle={handleTileOverlayToggle}
+          />
+        </div>
       </div>
 
       <MapView vm={mapVM} />

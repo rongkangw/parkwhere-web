@@ -1,3 +1,5 @@
+"use server";
+
 import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import ParkingSpot from "@/core/constants/ParkingSpot";
@@ -45,6 +47,13 @@ export async function POST(request: NextRequest) {
 
   const sql = neon(databaseUrl);
   try {
+    // Deduplicate spots by their unique key (lat,lng) to avoid DB conflicts.
+    const uniqueSpots = Array.from(
+      new Map(
+        spots.map((spot) => [createParkingSpotKey(spot.lat, spot.lng), spot]),
+      ).values(),
+    );
+
     await sql`
       INSERT INTO parking_spots (
         uniqueid,
@@ -66,15 +75,15 @@ export async function POST(request: NextRequest) {
         t.racktype,
         t.type
       FROM UNNEST(
-        ${spots.map((s) => createParkingSpotKey(s.lat, s.lng))}::text[],
-        ${spots.map((s) => s.name)}::text[],
-        ${spots.map((s) => s.lng)}::float8[],
-        ${spots.map((s) => s.lat)}::float8[],
-        ${spots.map((s) => s.occupancy)}::int[],
-        ${spots.map((s) => s.capacity)}::int[],
-        ${spots.map((s) => s.sheltered)}::boolean[],
-        ${spots.map((s) => s.parkingType)}::text[],
-        ${spots.map((s) => s.sourceType)}::text[]
+        ${uniqueSpots.map((s) => createParkingSpotKey(s.lat, s.lng))}::text[],
+        ${uniqueSpots.map((s) => s.name)}::text[],
+        ${uniqueSpots.map((s) => s.lng)}::float8[],
+        ${uniqueSpots.map((s) => s.lat)}::float8[],
+        ${uniqueSpots.map((s) => s.occupancy)}::int[],
+        ${uniqueSpots.map((s) => s.capacity)}::int[],
+        ${uniqueSpots.map((s) => s.sheltered)}::boolean[],
+        ${uniqueSpots.map((s) => s.parkingType)}::text[],
+        ${uniqueSpots.map((s) => s.sourceType)}::text[]
       ) AS t(
         uniqueid,
         name,
@@ -110,7 +119,7 @@ export async function POST(request: NextRequest) {
     `;
 
     return NextResponse.json(
-      { success: true, upsertedCount: spots.length, tileId },
+      { success: true, upsertedCount: uniqueSpots.length, tileId },
       { status: 200 },
     );
   } catch (error) {

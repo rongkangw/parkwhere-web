@@ -38,6 +38,7 @@ export default function useMapViewModel({
   );
   const mapRef = useRef<MapRef | null>(null);
   const [selectedRackId, setSelectedRackId] = useState<string | null>(null);
+  const [tileOverlayEnabled, setTileOverlayEnabled] = useState(false);
 
   const {
     data,
@@ -59,9 +60,10 @@ export default function useMapViewModel({
 
   const parkingGeoJson = useMemo(() => toGeoJson(racks), [racks]);
   const tileGeoJson = useMemo(
-    () => generateCityTileOverlay(fetchedTileIds),
+    () => generateTileOverlay(fetchedTileIds),
     [fetchedTileIds],
   );
+
   const selectedRack = useMemo(
     () => racks.find((rack) => rack.id === selectedRackId) ?? null,
     [racks, selectedRackId],
@@ -149,6 +151,10 @@ export default function useMapViewModel({
     setSelectedRackId(null);
   }, []);
 
+  const handleTileOverlayToggle = useCallback((enabled: boolean) => {
+    setTileOverlayEnabled(enabled);
+  }, []);
+
   const handleMoveEnd = useCallback(
     (event: { viewState: { latitude: number; longitude: number } }) => {
       const { latitude, longitude } = event.viewState;
@@ -170,6 +176,8 @@ export default function useMapViewModel({
     searchResults,
     mapRef,
     selectedRack,
+    tileOverlayEnabled,
+    handleTileOverlayToggle,
     tileGeoJson,
     parkingGeoJson,
     focusOnCoordinates: handleMoveToCoordinates,
