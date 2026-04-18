@@ -2,7 +2,7 @@
 
 import { ReactNode } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { queryClient } from "@/modules/parking/queryClient";
+import { queryClient } from "@/core/queryClient";
 import "@/app/globals.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 

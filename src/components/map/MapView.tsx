@@ -57,6 +57,7 @@ export default function MapView({ vm }: MapViewProps) {
           [MIN_LNG, MIN_LAT],
           [MAX_LNG, MAX_LAT],
         ]}
+        attributionControl={false} // logo is not required
         interactiveLayerIds={[MAP_LAYER_ID, MAP_CLUSTER_LAYER_ID]}
         onMoveEnd={handleMoveEnd}
         onClick={handleMarkerClick}
