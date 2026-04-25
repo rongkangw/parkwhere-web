@@ -70,8 +70,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     return NextResponse.json(
       {
-        error: "Failed to fetch tile status from database",
-        detail: error instanceof Error ? error.message : String(error),
+        error: error instanceof Error ? error.message : String(error),
       },
       { status: 500 },
     );

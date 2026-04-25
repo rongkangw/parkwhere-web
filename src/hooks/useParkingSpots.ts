@@ -6,7 +6,7 @@ import {
 } from "@/core/constants/map/MapConstants";
 import fetchOnlineSpots from "@/modules/parking/fetchOnlineSpots";
 import fetchDbSpots from "@/modules/db/fetchDbSpots";
-import ParkingSpot from "@/core/constants/ParkingSpot";
+import ParkingSpot from "@/core/constants/parkingspot/ParkingSpot";
 import getTileId from "@/app/utils/getTileId";
 import fetchTileStatus from "@/modules/db/fetchTileStatus";
 import getAdjacentTileIds from "@/app/utils/getAdjacentTileIds";
@@ -44,7 +44,7 @@ export default function useParkingSpots(
           return await fetchTileStatus(tileId);
         } catch (error) {
           console.warn(
-            `Tile ${tileId} status check failed. Proceeding with online fetch. Error: ${error}`,
+            `Tile ${tileId} status check failed. Proceeding with online fetch. ${error}`,
           );
           throw error;
         }
@@ -104,9 +104,9 @@ export default function useParkingSpots(
             );
           } catch (error) {
             console.warn(
-              `Spots query failed for tile ${tileId}. Error: ${error}`,
+              `Spots query failed for tile ${tileId} >> ${error instanceof Error ? error.message : String(error)}`,
             );
-            throw error;
+            throw new Error(`Failed to fetch spots for tile ${tileId}`);
           }
         },
         enabled:
@@ -159,7 +159,7 @@ export default function useParkingSpots(
         persistedTileSignaturesRef.current.add(signature);
       } catch (error) {
         console.warn(
-          `Failed to persist online spots for tile ${tileId}. Error: ${error}`,
+          `Failed to persist online spots for tile ${tileId} >> ${error instanceof Error ? error.message : String(error)}`,
         );
       }
     };

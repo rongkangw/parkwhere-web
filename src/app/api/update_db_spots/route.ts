@@ -2,7 +2,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
-import ParkingSpot from "@/core/constants/ParkingSpot";
+import ParkingSpot from "@/core/constants/parkingspot/ParkingSpot";
 import createParkingSpotKey from "@/app/utils/createParkingSpotId";
 
 type UpdateDbSpotsRequest = {

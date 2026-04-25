@@ -1,6 +1,6 @@
 import createParkingSpotKey from "@/app/utils/createParkingSpotId";
-import ParkingSpot from "@/core/constants/ParkingSpot";
-import ParkingSpotApiResponse from "@/core/constants/ParkingSpotApiResponse";
+import ParkingSpot from "@/core/constants/parkingspot/ParkingSpot";
+import ParkingSpotApiResponse from "@/core/constants/parkingspot/ParkingSpotApiResponse";
 
 export default async function fetchOnlineSpots(
   lat: number,
@@ -18,8 +18,10 @@ export default async function fetchOnlineSpots(
   const res = await fetch(`/api/fetch_online_spots?${params.toString()}`);
 
   if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Code: ${res.status} ${errorText}`);
+    const data = await res.json();
+    throw new Error(
+      `(ONLINE) Spots fetch failed for params ${params.toString()}: ${data.error}`,
+    );
   }
 
   const data = await res.json();

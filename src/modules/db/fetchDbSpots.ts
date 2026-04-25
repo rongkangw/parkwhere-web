@@ -1,5 +1,5 @@
-import ParkingSpot from "@/core/constants/ParkingSpot";
-import ParkingSpotDbResponse from "@/core/constants/ParkingSpotDbResponse";
+import ParkingSpot from "@/core/constants/parkingspot/ParkingSpot";
+import ParkingSpotDbResponse from "@/core/constants/parkingspot/ParkingSpotDbResponse";
 
 export default async function fetchDbSpots(
   lat: number,
@@ -17,8 +17,10 @@ export default async function fetchDbSpots(
   const res = await fetch(`/api/fetch_db_spots?${params.toString()}`);
 
   if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Code: ${res.status} ${errorText}`);
+    const data = await res.json();
+    throw new Error(
+      `(DB) Spots fetch failed for params ${params.toString()}: ${data.error}`,
+    );
   }
 
   const data = await res.json();

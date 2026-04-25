@@ -8,12 +8,16 @@ type SearchBarProps = {
 };
 
 export default function SearchBar({
-  placeholder = "Search",
-  searchValue = "",
+  placeholder,
+  searchValue,
   onChangeValue = () => {},
   onEnter,
 }: SearchBarProps) {
-  const [searchInput, setSearchInput] = useState(searchValue);
+  const [internalSearchInput, setInternalSearchInput] = useState(
+    searchValue ?? "",
+  );
+  const isControlled = typeof searchValue === "string";
+  const renderedSearchInput = isControlled ? searchValue : internalSearchInput;
 
   return (
     <div
@@ -26,14 +30,16 @@ export default function SearchBar({
         <input
           id="parking-search"
           type="text"
-          value={searchInput}
+          value={renderedSearchInput}
           onChange={(event) => {
-            setSearchInput(event.target.value);
+            if (!isControlled) {
+              setInternalSearchInput(event.target.value);
+            }
             onChangeValue(event.target.value);
           }}
           onKeyDown={(event) => {
             if (event.key === "Enter") {
-              onEnter(searchInput);
+              onEnter(renderedSearchInput);
             }
           }}
           placeholder={placeholder}

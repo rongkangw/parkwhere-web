@@ -1,4 +1,4 @@
-import ParkingSpot from "@/core/constants/ParkingSpot";
+import ParkingSpot from "@/core/constants/parkingspot/ParkingSpot";
 
 export default interface MapTile {
   tileId: string;

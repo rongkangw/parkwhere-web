@@ -1,4 +1,4 @@
-import ParkingSpot from "@/core/constants/ParkingSpot";
+import ParkingSpot from "@/core/constants/parkingspot/ParkingSpot";
 
 export default interface MapState {
   selectedRack: ParkingSpot | null; // store whole parking spot object for easier access in popup

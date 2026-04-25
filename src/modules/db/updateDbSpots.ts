@@ -1,4 +1,4 @@
-import ParkingSpot from "@/core/constants/ParkingSpot";
+import ParkingSpot from "@/core/constants/parkingspot/ParkingSpot";
 
 type UpdateDbSpotsPayload = {
   tileId: string;
@@ -29,7 +29,9 @@ export default async function updateDbSpots(
   });
 
   if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Code: ${res.status} ${errorText}`);
+    const data = await res.json();
+    throw new Error(
+      `(DB) Update spots failed for tile ${tileId}: ${data.error}`,
+    );
   }
 }

@@ -1,7 +1,7 @@
 import { Popup } from "react-map-gl/maplibre";
 import { Umbrella, UmbrellaOff } from "lucide-react";
 import { POPUP_ANCHOR, POPUP_OFFSET } from "@/core/constants/map/MapConstants";
-import ParkingSpot from "@/core/constants/ParkingSpot";
+import ParkingSpot from "@/core/constants/parkingspot/ParkingSpot";
 import PopupSourceTag from "@/components/map/PopupSourceTag";
 
 interface BikeParkingPopupProps {

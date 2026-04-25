@@ -22,7 +22,7 @@ import {
   MIN_LAT,
   MIN_LNG,
 } from "@/core/constants/map/MapConstants";
-import { mapStyle } from "@/core/constants/map/mapstyle/OnemapStyle";
+import { mapStyle } from "@/core/constants/mapstyle/OnemapStyle";
 import useMapViewModel from "@/viewmodels/MapViewModel";
 
 type MapViewProps = {
@@ -38,7 +38,7 @@ export default function MapView({ vm }: MapViewProps) {
     selectedRack,
     tileOverlayEnabled,
     handleMoveEnd,
-    handleMarkerClick,
+    handleMapClick,
     handlePopupClose,
   } = vm;
 
@@ -46,6 +46,7 @@ export default function MapView({ vm }: MapViewProps) {
     <div className="relative h-full w-full">
       <Map
         ref={mapRef}
+        onClick={handleMapClick}
         initialViewState={{
           latitude: queryLocation.latitude,
           longitude: queryLocation.longitude,
@@ -60,7 +61,6 @@ export default function MapView({ vm }: MapViewProps) {
         attributionControl={false} // logo is not required
         interactiveLayerIds={[MAP_LAYER_ID, MAP_CLUSTER_LAYER_ID]}
         onMoveEnd={handleMoveEnd}
-        onClick={handleMarkerClick}
       >
         {tileGeoJson && tileOverlayEnabled && (
           <Source id="tiles" type="geojson" data={tileGeoJson}>

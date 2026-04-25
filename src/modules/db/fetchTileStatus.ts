@@ -12,8 +12,8 @@ export default async function fetchTileStatus(
   const res = await fetch(`/api/fetch_tile_status?${params.toString()}`);
 
   if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Code: ${res.status} ${errorText}`);
+    const data = await res.json();
+    throw new Error(`(TILE) Status fetch failed for ${tileId}: ${data.error}`);
   }
 
   const data = (await res.json()) as {
