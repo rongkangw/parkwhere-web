@@ -3,11 +3,11 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { MapLayerMouseEvent, MapRef } from "react-map-gl/maplibre";
 import type { GeoJSONSource } from "maplibre-gl";
-import parseGeoInput from "@/app/utils/parseGeoInput";
-import getTileId from "@/app/utils/getTileId";
-import toGeoJson from "@/app/utils/toGeoJson";
-import generateTileOverlay from "@/app/utils/generateTileOverlay";
-import ParkingSpot from "@/core/constants/parkingspot/ParkingSpot";
+import parseGeoInput from "@/utils/geo/parseGeoInput";
+import getTileId from "@/utils/tile/getTileId";
+import buildParkingSpotGeoJson from "@/utils/parking/buildParkingSpotGeoJson";
+import buildTileOverlay from "@/utils/tile/buildTileOverlay";
+import ParkingSpot from "@/core/types/parking/ParkingSpot";
 import useParkingSpots from "@/hooks/useParkingSpots";
 import {
   DEFAULT_LATITUDE,
@@ -17,7 +17,7 @@ import {
   MAP_LAYER_ID,
   MAP_SOURCE_ID,
   SINGAPORE_BOUNDS_HINT,
-} from "@/core/constants/map/MapConstants";
+} from "@/core/constants/MapConstants";
 
 type UseMapViewModelArgs = {
   initialQueryLocation?: {
@@ -51,9 +51,9 @@ export default function useMapViewModel({
 
   const racks: ParkingSpot[] = useMemo(() => data ?? [], [data]);
 
-  const parkingGeoJson = useMemo(() => toGeoJson(racks), [racks]);
+  const parkingGeoJson = useMemo(() => buildParkingSpotGeoJson(racks), [racks]);
   const tileGeoJson = useMemo(
-    () => generateTileOverlay(fetchedTileIds),
+    () => buildTileOverlay(fetchedTileIds),
     [fetchedTileIds],
   );
 

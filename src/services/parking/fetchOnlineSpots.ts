@@ -1,6 +1,6 @@
-import createParkingSpotKey from "@/app/utils/createParkingSpotId";
-import ParkingSpot from "@/core/constants/parkingspot/ParkingSpot";
-import ParkingSpotApiResponse from "@/core/constants/parkingspot/ParkingSpotApiResponse";
+import createParkingSpotId from "@/utils/parking/createParkingSpotId";
+import ParkingSpot from "@/core/types/parking/ParkingSpot";
+import ParkingSpotApiResponse from "@/core/types/parking/ParkingSpotApiResponse";
 
 export default async function fetchOnlineSpots(
   lat: number,
@@ -30,7 +30,7 @@ export default async function fetchOnlineSpots(
   console.debug("(ONLINE) Fetched " + rawSpots.length + " parking spots");
 
   return rawSpots.map((spot: Partial<ParkingSpotApiResponse>) => ({
-    id: createParkingSpotKey(spot.Latitude as number, spot.Longitude as number),
+    id: createParkingSpotId(spot.Latitude as number, spot.Longitude as number),
     name: String(spot.Description ?? ""),
     lat: Number(spot.Latitude),
     lng: Number(spot.Longitude),

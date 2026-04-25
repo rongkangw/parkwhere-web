@@ -4,7 +4,7 @@ import {
   DATAMALL_URL,
   MISSING_LATLNG_ERROR,
   MISSING_LTA_KEY_ERROR,
-} from "@/core/constants/api/LtaApiConstants";
+} from "@/core/constants/LtaApiConstants";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {

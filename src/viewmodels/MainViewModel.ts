@@ -2,9 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { buildMapRoute } from "@/app/utils/mapRoute";
 import useGeocodingSearch from "@/hooks/useGeocodingSearch";
-import { OneMapGeocodeResult } from "@/modules/geocoding/fetchGeocodeResults";
+import { OneMapGeocodeResult } from "@/services/geocoding/fetchGeocodeResults";
 
 export default function useMainViewModel() {
   const router = useRouter();
@@ -40,12 +39,11 @@ export default function useMainViewModel() {
       }
 
       setSearchError(null);
-      router.push(
-        buildMapRoute({
-          latitude,
-          longitude,
-        }),
-      );
+      const params = new URLSearchParams({
+        lat: String(latitude),
+        lng: String(longitude),
+      });
+      router.push(`/map?${params.toString()}`);
     },
     [router],
   );
@@ -70,7 +68,7 @@ export default function useMainViewModel() {
 
   const openMapDirectly = useCallback(() => {
     setSearchError(null);
-    router.push(buildMapRoute());
+    router.push("/map");
   }, [router]);
 
   const handleBackToHome = useCallback(() => {

@@ -1,7 +1,7 @@
-import ParkingSpot from "@/core/constants/parkingspot/ParkingSpot";
+import ParkingSpot from "@/core/types/parking/ParkingSpot";
 import type { FeatureCollection, Point } from "geojson";
 
-export default function toParkingGeoJson(
+export default function buildParkingSpotGeoJson(
   racks?: ParkingSpot[],
 ): FeatureCollection<Point> {
   return {

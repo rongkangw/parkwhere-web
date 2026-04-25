@@ -4,13 +4,10 @@ import {
   MIN_LAT,
   MIN_LNG,
   TILE_SIZE,
-} from "@/core/constants/map/MapConstants";
+} from "@/core/constants/MapConstants";
 import type { FeatureCollection, Polygon } from "geojson";
 
-/**
- * Generate tile GeoJSON for MapView
- */
-export default function generateTileOverlay(
+export default function buildTileOverlay(
   tilesWithData: Set<string> = new Set(),
 ): FeatureCollection<Polygon> {
   const minX = Math.floor(MIN_LNG / TILE_SIZE);

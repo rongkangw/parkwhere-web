@@ -1,5 +1,5 @@
-import ParkingSpot from "@/core/constants/parkingspot/ParkingSpot";
-import ParkingSpotDbResponse from "@/core/constants/parkingspot/ParkingSpotDbResponse";
+import ParkingSpot from "@/core/types/parking/ParkingSpot";
+import ParkingSpotDbResponse from "@/core/types/parking/ParkingSpotDbResponse";
 
 export default async function fetchDbSpots(
   lat: number,

@@ -2,8 +2,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
-import ParkingSpot from "@/core/constants/parkingspot/ParkingSpot";
-import createParkingSpotKey from "@/app/utils/createParkingSpotId";
+import ParkingSpot from "@/core/types/parking/ParkingSpot";
+import createParkingSpotId from "@/utils/parking/createParkingSpotId";
 
 type UpdateDbSpotsRequest = {
   tileId: string;
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     // Deduplicate spots by their unique key (lat,lng) to avoid DB conflicts.
     const uniqueSpots = Array.from(
       new Map(
-        spots.map((spot) => [createParkingSpotKey(spot.lat, spot.lng), spot]),
+        spots.map((spot) => [createParkingSpotId(spot.lat, spot.lng), spot]),
       ).values(),
     );
 
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
         t.racktype,
         t.type
       FROM UNNEST(
-        ${uniqueSpots.map((s) => createParkingSpotKey(s.lat, s.lng))}::text[],
+        ${uniqueSpots.map((s) => createParkingSpotId(s.lat, s.lng))}::text[],
         ${uniqueSpots.map((s) => s.name)}::text[],
         ${uniqueSpots.map((s) => s.lng)}::float8[],
         ${uniqueSpots.map((s) => s.lat)}::float8[],

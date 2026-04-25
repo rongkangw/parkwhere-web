@@ -10,7 +10,7 @@ import SearchBar from "@/components/ui/SearchBar";
 import useMainViewModel from "@/viewmodels/MainViewModel";
 import useMapViewModel from "@/viewmodels/MapViewModel";
 import SettingsMenu from "@/components/ui/SettingsMenu";
-import parseGeoInput from "@/app/utils/parseGeoInput";
+import parseGeoInput from "@/utils/geo/parseGeoInput";
 
 export default function MapPage() {
   const searchParams = useSearchParams();

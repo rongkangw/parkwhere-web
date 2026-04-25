@@ -6,7 +6,7 @@ import {
   bikeParkingClusterCountPaint,
   bikeParkingClusterLayerPaint,
   bikeParkingLayerPaint,
-} from "@/app/utils/mapMarkerLayerStyle";
+} from "@/core/constants/MapMarkerLayerStyle";
 import BikeParkingPopup from "@/components/map/ParkingDetailPopup";
 
 import {
@@ -21,9 +21,9 @@ import {
   MAP_SOURCE_ID,
   MIN_LAT,
   MIN_LNG,
-} from "@/core/constants/map/MapConstants";
-import { mapStyle } from "@/core/constants/mapstyle/OnemapStyle";
+} from "@/core/constants/MapConstants";
 import useMapViewModel from "@/viewmodels/MapViewModel";
+import { mapStyle } from "@/core/constants/MapStyle";
 
 type MapViewProps = {
   vm: ReturnType<typeof useMapViewModel>;

@@ -1,4 +1,4 @@
-import MapTileResponse from "@/core/constants/map/MapTileResponse";
+import MapTileResponse from "@/core/types/map/MapTileResponse";
 
 /**
  * Checks if a tile has already been fetched.

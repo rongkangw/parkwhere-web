@@ -1,4 +1,4 @@
-import { TILE_SIZE } from "@/core/constants/map/MapConstants";
+import { TILE_SIZE } from "@/core/constants/MapConstants";
 
 export default function getTileId(lat: number, lng: number): string {
   const x = Math.floor(lng / TILE_SIZE);

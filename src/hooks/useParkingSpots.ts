@@ -3,17 +3,17 @@ import { useEffect, useMemo, useRef } from "react";
 import {
   DEFAULT_QUERY_DISTANCE,
   DEFAULT_QUERY_DISTANCE_METERS,
-} from "@/core/constants/map/MapConstants";
-import fetchOnlineSpots from "@/modules/parking/fetchOnlineSpots";
-import fetchDbSpots from "@/modules/db/fetchDbSpots";
-import ParkingSpot from "@/core/constants/parkingspot/ParkingSpot";
-import getTileId from "@/app/utils/getTileId";
-import fetchTileStatus from "@/modules/db/fetchTileStatus";
-import getAdjacentTileIds from "@/app/utils/getAdjacentTileIds";
-import MapTileResponse from "@/core/constants/map/MapTileResponse";
-import { getTileCenter } from "@/app/utils/getTileCenter";
-import MapTile from "../core/constants/map/MapTile";
-import updateDbSpots from "@/modules/db/updateDbSpots";
+} from "@/core/constants/MapConstants";
+import fetchOnlineSpots from "@/services/parking/fetchOnlineSpots";
+import fetchDbSpots from "@/services/db/fetchDbSpots";
+import ParkingSpot from "@/core/types/parking/ParkingSpot";
+import getTileId from "@/utils/tile/getTileId";
+import fetchTileStatus from "@/services/db/fetchTileStatus";
+import getAdjacentTileIds from "@/utils/tile/getAdjacentTileIds";
+import MapTileResponse from "@/core/types/map/MapTileResponse";
+import { getTileCenter } from "@/utils/tile/getTileCenter";
+import MapTile from "../core/types/map/MapTile";
+import updateDbSpots from "@/services/db/updateDbSpots";
 
 type TileStatusQueryResponse = {
   data?: MapTileResponse;

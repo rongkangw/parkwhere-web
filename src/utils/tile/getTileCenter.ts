@@ -1,5 +1,5 @@
-import parseTileId from "@/app/utils/parseTileId";
-import { TILE_SIZE } from "@/core/constants/map/MapConstants";
+import parseTileId from "@/utils/tile/parseTileId";
+import { TILE_SIZE } from "@/core/constants/MapConstants";
 
 export function getTileCenter(tileId: string): { lat: number; lng: number } {
   const { x, y } = parseTileId(tileId);

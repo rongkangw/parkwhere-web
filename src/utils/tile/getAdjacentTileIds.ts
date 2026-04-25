@@ -1,4 +1,4 @@
-import parseTileId from "@/app/utils/parseTileId";
+import parseTileId from "@/utils/tile/parseTileId";
 
 export default function getAdjacentTileIds(tileId: string): string[] {
   const { x, y } = parseTileId(tileId);
