@@ -9,19 +9,9 @@ export default function PopupSourceTag({ sourceType }: SourceTypeBadgeProps) {
 
   return (
     <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        padding: "2px 8px",
-        fontSize: "0.75rem",
-        fontWeight: 600,
-        lineHeight: 1.2,
-        textTransform: "capitalize",
-        borderRadius: 9999,
-        backgroundColor: "#ffffff",
-        border: `1px solid ${isOfficial ? "#16a34a" : "#eab308"}`,
-        boxShadow: "0 1px 4px rgba(0, 0, 0, 0.12)",
-      }}
+      className={`inline-flex items-center rounded-full border bg-white px-2 py-0.5 text-xs leading-[1.2] font-semibold capitalize shadow-sm ${
+        isOfficial ? "border-green-600" : "border-amber-500"
+      }`}
     >
       {isOfficial ? "Official" : "Community"}
     </span>

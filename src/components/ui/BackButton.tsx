@@ -7,7 +7,7 @@ export default function BackButton({ onClick }: BackButtonProps) {
     <button
       type="button"
       onClick={onClick}
-      className="pointer-events-auto h-12 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-100"
+      className="ui-floating-btn pointer-events-auto h-12 px-4 text-sm font-semibold"
     >
       Back
     </button>

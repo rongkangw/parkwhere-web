@@ -19,12 +19,12 @@ export default function SettingsMenu({
         onClick={() => {
           setIsExpanded(!isExpanded);
         }}
-        className="z-10 rounded-full bg-white/95 p-2 transition-colors hover:bg-slate-200"
+        className="ui-floating-btn z-10 p-2"
       >
         <Settings size={20} className="text-slate-700" />
       </button>
       {isExpanded && (
-        <div className="absolute right-0 bottom-full z-10 mb-2 w-56 rounded-xl border border-slate-200 bg-white/95 p-2 shadow-lg backdrop-blur-sm">
+        <div className="ui-floating-surface absolute right-0 bottom-full z-10 mb-2 w-56 p-2">
           <SettingsMenuRow
             settingName="Show Tile Overlay"
             toggleValue={tileOverlayEnabled}

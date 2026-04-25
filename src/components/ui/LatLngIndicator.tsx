@@ -8,7 +8,7 @@ export default function LatLngIndicator({
   longitude,
 }: LatLngDebugProps) {
   return (
-    <div className="rounded-lg bg-white/95 px-3 py-2 font-mono text-xs whitespace-nowrap text-slate-700 shadow-sm">
+    <div className="ui-floating-surface px-3 py-2 font-mono text-xs whitespace-nowrap">
       lat: {latitude.toFixed(6)}, lng: {longitude.toFixed(6)}
     </div>
   );

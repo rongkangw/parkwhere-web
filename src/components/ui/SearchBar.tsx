@@ -20,9 +20,7 @@ export default function SearchBar({
   const renderedSearchInput = isControlled ? searchValue : internalSearchInput;
 
   return (
-    <div
-      className={`flex h-12 w-full rounded-lg border border-slate-300 bg-white text-slate-900 shadow-sm`}
-    >
+    <div className="ui-floating-surface flex h-12 w-full">
       <div className="w-full px-4 py-2">
         <label htmlFor="parking-search" className="sr-only">
           Search input
