@@ -1,52 +1,103 @@
-# ParkWhere Web
+# 🚲 ParkWhere
 
-ParkWhere Web is a Next.js app for viewing bicycle parking locations on an interactive map.
+## What It Does
 
-## What The App Currently Does
+ParkWhere shows you available bicycle parking spots near you on an interactive map. Search for a location (or use your current one) and instantly see all the parking options around you.
 
-- Loads bicycle parking data from LTA Datamall through a Next.js API route.
-- Displays parking spots on a MapLibre map.
-- Updates map camera coordinates on map movement.
-- Lets users click a parking marker/layer point to focus the camera and open a details popup.
+Try it here: **[parkwhere-web.vercel.app](https://parkwhere-web.vercel.app)**
 
-## Tech Stack
+## Quick Start
 
-- Next.js (App Router)
-- React
-- TypeScript
-- React Query
-- Zustand
-- MapLibre + react-map-gl
+1. **Open** the app via the link
+2. **Search or use** "use my location"
+3. **Browse the map** to see spots near you
+4. **Click a spot** to see details
+5. **Navigate** and park
 
-## Prerequisites
+## Project Structure
 
-- Node.js 18+ (recommended)
-- npm
-
-## Environment Variables
-
-Create a `.env.local` file in the project root:
-
-```bash
-NEXT_PUBLIC_API_KEY=your_lta_datamall_account_key
+```
+src/
+├── app/
+│   ├── api/                    # Server-side API route handlers
+│   ├── (pages)/                # Main pages (map view, home)
+│   └── utils/                  # Utility helpers (tile math, parsing, etc)
+├── components/
+│   ├── map/                    # Map-related UI components
+│   └── ui/                     # General UI components
+├── core/
+│   └── constants/              # Types & constants
+├── hooks/                      # Custom React hooks for viewmodels
+├── modules/                    # Client-side API functions
+└── viewmodels/                 # State & logic for views
 ```
 
-## How To Run
+## Current features
 
-1. Install dependencies:
+- Loads bicycle parking data using [LTA Datamall's API service](https://datamall.lta.gov.sg/content/datamall/en/dynamic-data.html)
+- Utilizes PostgreSQL (Neon) for persisted spot/tile status
+- Interactive MapLibre map with marker layers and detail popups
+- Client-side caching and fetching via React Query
+
+## Planned/Future Features
+
+- [ ] Crowdsourced spot availability updates
+- [ ] Additional data layers (e.g., bike lanes, repair shops)
+- [ ] Linked navigation to parking spots via Google Maps/Apple Maps
+- [ ] User reviews and ratings for parking spots
+- [ ] Better mobile compatibility (currently does not support mobile browsers well)
+
+## Local Setup
+
+Since this project relies on external data (LTA Datamall, OneMap) and integrations (Neon), you will need to set up environment variables to run it locally.
+
+1. Clone the repository
+
+```bash
+git clone https://github.com/rongkangw/parkwhere-web.git
+```
+
+2. Install dependencies
 
 ```bash
 npm install
 ```
 
-2. Start the development server:
+3. Configure Environment Variables
+
+Create a `.env.local` file in the project root directory and add the following:
+
+```bash
+# PostgreSQL connection string (Neon)
+# Get one at: https://neon.com/
+DATABASE_URL="your_postgres_connection_url"
+
+# LTA Datamall API Key
+# Get one at: https://datamall.lta.gov.sg/content/datamall/en/request-for-api.html
+LTA_PARKINGSPOT_API_KEY="your_lta_api_key"
+
+# OneMap API credentials (for geocoding)
+# Get one at: https://www.onemap.gov.sg/apidocs/register
+ONE_MAP_PASSWORD="your_onemap_password"
+ONE_MAP_EMAIL="your_onemap_email"
+```
+
+4. Run the development server
 
 ```bash
 npm run dev
 ```
 
-3. Open the app:
+## Tech Stack
 
-```text
-http://localhost:3000
-```
+- Developed using **React** + **TypeScript**
+- **Next.js** (App Router)
+- **MapLibre GL** + **react-map-gl** for the map
+- **Vercel** for deployment
+- **React Query** for data fetching
+- **Tailwind CSS** for styling
+- **PostgreSQL (Neon)** for data storage
+
+## Feedback
+
+Found a bug or have an idea? Please raise a new issue in the "Issues" page. Contributions are also very welcome!

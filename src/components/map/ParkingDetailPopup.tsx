@@ -1,6 +1,5 @@
 import { Popup } from "react-map-gl/maplibre";
 import { Umbrella, UmbrellaOff } from "lucide-react";
-import { POPUP_ANCHOR, POPUP_OFFSET } from "@/core/constants/map/MapConstants";
 import ParkingSpot from "@/core/constants/ParkingSpot";
 import PopupSourceTag from "@/components/map/PopupSourceTag";
 
@@ -17,10 +16,10 @@ export default function BikeParkingPopup({
     <Popup
       longitude={rack.lng}
       latitude={rack.lat}
-      anchor={POPUP_ANCHOR}
+      anchor={"left"}
       closeOnClick={false}
       onClose={onClose}
-      offset={POPUP_OFFSET}
+      offset={12}
     >
       <div className="min-w-50 border-gray-300 bg-white px-2 text-[#5686E1]">
         <div className="flex items-center justify-between gap-2">
