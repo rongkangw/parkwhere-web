@@ -4,8 +4,6 @@ import fetchGeocodeResults, {
   OneMapGeocodeResult,
 } from "@/services/geocoding/fetchGeocodeResults";
 
-export type { OneMapGeocodeResult } from "@/services/geocoding/fetchGeocodeResults";
-
 type UseGeocodingSearchResult = {
   geocodeResults: OneMapGeocodeResult[];
   isGeocodeLoading: boolean;

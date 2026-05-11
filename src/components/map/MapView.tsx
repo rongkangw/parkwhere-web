@@ -1,6 +1,6 @@
 "use client";
 
-import Map, { Layer, Source } from "react-map-gl/maplibre";
+import Map, { Layer, Marker, Source } from "react-map-gl/maplibre";
 import {
   bikeParkingClusterCountLayout,
   bikeParkingClusterCountPaint,
@@ -37,6 +37,7 @@ export default function MapView({ vm }: MapViewProps) {
     parkingGeoJson,
     selectedRack,
     tileOverlayEnabled,
+    userLocation,
     handleMoveEnd,
     handleMapClick,
     handlePopupClose,
@@ -121,6 +122,27 @@ export default function MapView({ vm }: MapViewProps) {
 
         {selectedRack && (
           <BikeParkingPopup rack={selectedRack} onClose={handlePopupClose} />
+        )}
+
+        {userLocation && (
+          <Marker
+            longitude={userLocation.longitude}
+            latitude={userLocation.latitude}
+            anchor="center"
+          >
+            <div className="relative flex h-8 w-8 items-center justify-center">
+              <div className="h-6 w-6 rounded-full border-2 border-white bg-sky-500 shadow-md" />
+              <div className="absolute h-8 w-8 rounded-full border-2 border-sky-400/50" />
+              {userLocation.heading != null && (
+                <div
+                  className="absolute -top-3 left-1/2 h-3 w-1 -translate-x-1/2 rounded-full bg-sky-700"
+                  style={{
+                    transform: `translateX(-50%) rotate(${userLocation.heading}deg)`,
+                  }}
+                />
+              )}
+            </div>
+          </Marker>
         )}
       </Map>
     </div>

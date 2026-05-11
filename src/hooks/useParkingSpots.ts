@@ -196,17 +196,10 @@ export default function useParkingSpots(
 
   return {
     data: spots,
-    error: parkingSpotsQueries.find((query) => query.isError)?.error,
-    isError: parkingSpotsQueries.some((query) => query.isError),
+    error: parkingSpotsQueries.find((query) => query.isError)?.error.message,
     isLoading:
       tilesStatusQueries.some((query) => query.isLoading) ||
       parkingSpotsQueries.some((query) => query.isLoading),
-    currentTile: tile,
-    isTileStatusResolved: tilesStatusQueries.every(
-      (query) => query.isSuccess || query.isError,
-    ),
-    isTileFetched: fetchedTileIds.has(tile),
     fetchedTileIds,
-    tileFetchEntries: tileFetchEntriesWithSpots,
   };
 }

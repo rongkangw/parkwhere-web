@@ -2,6 +2,7 @@
 
 import { Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
+import { LocateFixed } from "lucide-react";
 import MapStatusPopup from "@/components/map/MapStatusPopup";
 import MapView from "@/components/map/MapView";
 import BackButton from "@/components/ui/BackButton";
@@ -30,12 +31,11 @@ export default function MapPage() {
   const {
     queryLocation,
     isLoading,
-    isError,
-    error,
     handleMapSearch,
-    searchInputError,
+    mapErrors,
     tileOverlayEnabled,
     handleTileOverlayToggle,
+    handleRequestUserLocation,
   } = mapVM;
 
   return (
@@ -61,7 +61,7 @@ export default function MapPage() {
             </div>
           </div>
 
-          {(isLoading || isError || searchInputError) && (
+          {(isLoading || mapErrors.length > 0) && (
             <div className="mt-2 flex w-full justify-center">
               <div className="space-y-2">
                 {isLoading && (
@@ -70,12 +70,13 @@ export default function MapPage() {
                     variant="loading"
                   />
                 )}
-                {error && (
-                  <MapStatusPopup message={error.message} variant="error" />
-                )}
-                {searchInputError && (
-                  <MapStatusPopup message={searchInputError} variant="error" />
-                )}
+                {mapErrors.map((item) => (
+                  <MapStatusPopup
+                    key={item.id}
+                    message={item.message}
+                    variant="error"
+                  />
+                ))}
               </div>
             </div>
           )}
@@ -87,6 +88,13 @@ export default function MapPage() {
               latitude={queryLocation.latitude}
               longitude={queryLocation.longitude}
             />
+            <button
+              type="button"
+              onClick={handleRequestUserLocation}
+              className="ui-floating-btn z-10 p-2"
+            >
+              <LocateFixed size={20} />
+            </button>
             <SettingsMenu
               tileOverlayEnabled={tileOverlayEnabled}
               onTileOverlayToggle={handleTileOverlayToggle}
