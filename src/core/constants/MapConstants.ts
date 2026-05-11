@@ -13,7 +13,6 @@ export const SINGAPORE_BOUNDS_HINT = `Only coordinates within Singapore are allo
 export const INITIAL_ZOOM = 13;
 export const FOCUS_DURATION = 700;
 
-export const QUERY_COORDINATE_PRECISION = 3;
 export const STORAGE_COORDINATE_PRECISION = 6;
 
 export const MAP_SOURCE_ID = "bike-parking-source";
@@ -22,8 +21,3 @@ export const MAP_CLUSTER_LAYER_ID = "bike-parking-cluster-layer";
 export const MAP_CLUSTER_COUNT_LAYER_ID = "bike-parking-cluster-count-layer";
 export const MAP_CLUSTER_MAX_ZOOM = 15;
 export const MAP_CLUSTER_RADIUS = 48;
-
-export const POPUP_ANCHOR = "left" as const;
-export const POPUP_OFFSET = 12;
-export const POPUP_MIN_WIDTH = 200;
-export const POPUP_TEXT_COLOR = "#5686E1";
