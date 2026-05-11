@@ -14,6 +14,23 @@ import SettingsMenu from "@/components/ui/SettingsMenu";
 import parseGeoInput from "@/utils/geo/parseGeoInput";
 
 export default function MapPage() {
+  return (
+    // useSearchParams() needs a Suspense boundary in Next.js App Router.
+    // Even though this is a Client Component, wrapping it in Suspense prevents the entire route
+    // from being forced into client-side rendering during prerendering.
+    <Suspense
+      fallback={
+        <div className="pointer-events-none fixed top-20 left-1/2 z-20 -translate-x-1/2">
+          <MapStatusPopup message={"Loading map..."} variant="loading" />
+        </div>
+      }
+    >
+      <MapPageContent />
+    </Suspense>
+  );
+}
+
+function MapPageContent() {
   const searchParams = useSearchParams();
   const { handleBackToHome } = useMainViewModel();
 
@@ -39,71 +56,63 @@ export default function MapPage() {
   } = mapVM;
 
   return (
-    <Suspense
-      fallback={
-        <div className="pointer-events-none fixed top-20 left-1/2 z-20 -translate-x-1/2">
-          <MapStatusPopup message={"Loading map..."} variant="loading" />
-        </div>
-      }
-    >
-      <main className="h-screen w-screen">
-        <div className="fixed top-4 z-20 w-full">
-          <div className="relative flex w-full items-center px-2">
-            <div className="mr-auto">
-              <BackButton onClick={handleBackToHome} />
-            </div>
-
-            <div className="pointer-events-auto absolute left-1/2 w-[60vw] max-w-[60vw] min-w-56 -translate-x-1/2">
-              <SearchBar
-                onEnter={handleMapSearch}
-                placeholder="Jump to a location..."
-              />
-            </div>
+    <main className="h-screen w-screen">
+      <div className="fixed top-4 z-20 w-full">
+        <div className="relative flex w-full items-center px-2">
+          <div className="mr-auto">
+            <BackButton onClick={handleBackToHome} />
           </div>
 
-          {(isLoading || mapErrors.length > 0) && (
-            <div className="mt-2 flex w-full justify-center">
-              <div className="space-y-2">
-                {isLoading && (
-                  <MapStatusPopup
-                    message={"Loading bike parking data..."}
-                    variant="loading"
-                  />
-                )}
-                {mapErrors.map((item) => (
-                  <MapStatusPopup
-                    key={item.id}
-                    message={item.message}
-                    variant="error"
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="fixed right-4 bottom-4 z-20">
-          <div className="flex items-end gap-2">
-            <LatLngIndicator
-              latitude={queryLocation.latitude}
-              longitude={queryLocation.longitude}
-            />
-            <button
-              type="button"
-              onClick={handleRequestUserLocation}
-              className="ui-floating-btn z-10 p-2"
-            >
-              <LocateFixed size={20} />
-            </button>
-            <SettingsMenu
-              tileOverlayEnabled={tileOverlayEnabled}
-              onTileOverlayToggle={handleTileOverlayToggle}
+          <div className="pointer-events-auto absolute left-1/2 w-[60vw] max-w-[60vw] min-w-56 -translate-x-1/2">
+            <SearchBar
+              onEnter={handleMapSearch}
+              placeholder="Jump to a location..."
             />
           </div>
         </div>
 
-        <MapView vm={mapVM} />
-      </main>
-    </Suspense>
+        {(isLoading || mapErrors.length > 0) && (
+          <div className="mt-2 flex w-full justify-center">
+            <div className="space-y-2">
+              {isLoading && (
+                <MapStatusPopup
+                  message={"Loading bike parking data..."}
+                  variant="loading"
+                />
+              )}
+              {mapErrors.map((item) => (
+                <MapStatusPopup
+                  key={item.id}
+                  message={item.message}
+                  variant="error"
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="fixed right-4 bottom-4 z-20">
+        <div className="flex items-end gap-2">
+          <LatLngIndicator
+            latitude={queryLocation.latitude}
+            longitude={queryLocation.longitude}
+          />
+          <button
+            type="button"
+            onClick={handleRequestUserLocation}
+            className="ui-floating-btn z-10 p-2"
+          >
+            <LocateFixed size={20} />
+          </button>
+          <SettingsMenu
+            tileOverlayEnabled={tileOverlayEnabled}
+            onTileOverlayToggle={handleTileOverlayToggle}
+          />
+        </div>
+      </div>
+
+      <MapView vm={mapVM} />
+    </main>
   );
 }
