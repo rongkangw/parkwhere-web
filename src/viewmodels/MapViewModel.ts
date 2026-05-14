@@ -9,7 +9,9 @@ import buildParkingSpotGeoJson from "@/utils/parking/buildParkingSpotGeoJson";
 import buildTileOverlay from "@/utils/tile/buildTileOverlay";
 import ParkingSpot from "@/core/types/parking/ParkingSpot";
 import useParkingSpots from "@/hooks/useParkingSpots";
+import useGeocodingSearch from "@/hooks/useGeocodingSearch";
 import useGoogleMapsRedirect from "@/hooks/useGoogleMapsRedirect";
+import { OneMapGeocodeResult } from "@/services/geocoding/fetchGeocodeResults";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
@@ -50,6 +52,9 @@ export default function useMapViewModel({
   const [userLocationState, setUserLocationState] =
     useState<UserLocationState | null>(null);
   const [mapErrors, setMapErrors] = useState<MapError[]>([]);
+  const [searchInput, setSearchInput] = useState("");
+  const { geocodeResults, isGeocodeLoading, geocodeError } =
+    useGeocodingSearch(searchInput);
   const { openGoogleMapsPin, openGoogleMapsDirections } =
     useGoogleMapsRedirect();
 
@@ -170,6 +175,61 @@ export default function useMapViewModel({
       return true;
     },
     [addMapError, handleMoveToCoordinates, runMapSearch],
+  );
+
+  const handleSearchInputChange = useCallback((value: string) => {
+    setSearchInput(value);
+  }, []);
+
+  const handleOpenMapWithResult = useCallback(
+    (result: OneMapGeocodeResult) => {
+      const latitude = Number(result.LATITUDE);
+      const longitude = Number(result.LONGITUDE);
+
+      if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
+        return;
+      }
+
+      queryTile.current = getTileId(latitude, longitude);
+      setQueryLocation({ latitude, longitude });
+      handleMoveToCoordinates(latitude, longitude);
+    },
+    [handleMoveToCoordinates],
+  );
+
+  const handleOpenMapFromEnter = useCallback(() => {
+    const parsedCoordinates = parseGeoInput(searchInput.trim());
+    if (parsedCoordinates) {
+      queryTile.current = getTileId(
+        parsedCoordinates.latitude,
+        parsedCoordinates.longitude,
+      );
+      setQueryLocation(parsedCoordinates);
+      handleMoveToCoordinates(
+        parsedCoordinates.latitude,
+        parsedCoordinates.longitude,
+      );
+      return true;
+    }
+
+    if (geocodeResults.length > 0) {
+      handleOpenMapWithResult(geocodeResults[0]);
+      return true;
+    }
+
+    return false;
+  }, [
+    geocodeResults,
+    handleMoveToCoordinates,
+    handleOpenMapWithResult,
+    searchInput,
+  ]);
+
+  const selectGeocodeResult = useCallback(
+    (result: OneMapGeocodeResult) => {
+      handleOpenMapWithResult(result);
+    },
+    [handleOpenMapWithResult],
   );
 
   const handleMapClick = useCallback(
@@ -338,7 +398,14 @@ export default function useMapViewModel({
     fetchedTileIds,
     isLoading,
     queryLocation,
+    searchInput,
+    searchResults: geocodeResults,
+    geocodeError,
+    isGeocodeLoading,
     handleMapSearch,
+    handleSearchInputChange,
+    handleOpenMapFromEnter,
+    selectGeocodeResult,
     mapErrors,
     mapRef,
     selectedRack,

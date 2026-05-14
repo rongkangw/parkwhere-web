@@ -31,11 +31,11 @@ export default function useGeocodingSearch(
       return;
     }
 
+    setIsGeocodeLoading(true);
+    setGeocodeError(null);
+
     const abortController = new AbortController();
     const timeoutId = window.setTimeout(async () => {
-      setIsGeocodeLoading(true);
-      setGeocodeError(null);
-
       try {
         const geocodeResults = await fetchGeocodeResults(
           trimmedSearchValue,

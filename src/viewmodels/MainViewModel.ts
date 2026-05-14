@@ -9,7 +9,6 @@ export default function useMainViewModel() {
   const router = useRouter();
   const [searchInput, setSearchInput] = useState("");
   const [searchResults, setSearchResults] = useState<OneMapGeocodeResult[]>([]);
-  const [searchError, setSearchError] = useState<string | null>(null);
   const { geocodeResults, isGeocodeLoading, geocodeError } =
     useGeocodingSearch(searchInput);
 
@@ -17,15 +16,8 @@ export default function useMainViewModel() {
     setSearchResults(geocodeResults);
   }, [geocodeResults]);
 
-  useEffect(() => {
-    if (geocodeError) {
-      setSearchError(geocodeError);
-    }
-  }, [geocodeError]);
-
   const handleSearchInputChange = useCallback((value: string) => {
     setSearchInput(value);
-    setSearchError(null);
   }, []);
 
   const handleOpenMapWithResult = useCallback(
@@ -34,11 +26,8 @@ export default function useMainViewModel() {
       const longitude = Number(result.LONGITUDE);
 
       if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
-        setSearchError("Selected place has invalid coordinates.");
         return;
       }
-
-      setSearchError(null);
       const params = new URLSearchParams({
         lat: String(latitude),
         lng: String(longitude),
@@ -51,12 +40,10 @@ export default function useMainViewModel() {
   const handleOpenMapFromEnter = useCallback(() => {
     if (searchResults.length > 0) {
       handleOpenMapWithResult(searchResults[0]);
-      return;
+      return true;
     }
 
-    setSearchError(
-      "No places found. Select a place result or refine your search.",
-    );
+    return false;
   }, [handleOpenMapWithResult, searchResults]);
 
   const selectGeocodeResult = useCallback(
@@ -67,7 +54,6 @@ export default function useMainViewModel() {
   );
 
   const openMapDirectly = useCallback(() => {
-    setSearchError(null);
     router.push("/map");
   }, [router]);
 
@@ -78,7 +64,7 @@ export default function useMainViewModel() {
   return {
     searchInput,
     searchResults,
-    searchError,
+    geocodeError,
     handleSearchInputChange,
     isGeocodeLoading,
     handleOpenMapFromEnter,

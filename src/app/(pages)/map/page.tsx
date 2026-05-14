@@ -48,7 +48,13 @@ function MapPageContent() {
   const {
     queryLocation,
     isLoading,
-    handleMapSearch,
+    searchInput,
+    searchResults,
+    geocodeError,
+    isGeocodeLoading,
+    handleSearchInputChange,
+    handleOpenMapFromEnter,
+    selectGeocodeResult,
     mapErrors,
     tileOverlayEnabled,
     handleTileOverlayToggle,
@@ -65,8 +71,15 @@ function MapPageContent() {
 
           <div className="pointer-events-auto absolute left-1/2 w-[60vw] max-w-[60vw] min-w-56 -translate-x-1/2">
             <SearchBar
-              onEnter={handleMapSearch}
-              placeholder="Jump to a location..."
+              searchValue={searchInput}
+              onChangeValue={handleSearchInputChange}
+              onEnter={handleOpenMapFromEnter}
+              placeholder="Search a place or its coordinates"
+              searchResults={searchResults}
+              isGeocodeLoading={isGeocodeLoading}
+              geocodeError={geocodeError}
+              onSelectResult={selectGeocodeResult}
+              emptyResultsMessage="No places found."
             />
           </div>
         </div>
