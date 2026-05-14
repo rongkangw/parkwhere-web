@@ -9,6 +9,7 @@ import buildParkingSpotGeoJson from "@/utils/parking/buildParkingSpotGeoJson";
 import buildTileOverlay from "@/utils/tile/buildTileOverlay";
 import ParkingSpot from "@/core/types/parking/ParkingSpot";
 import useParkingSpots from "@/hooks/useParkingSpots";
+import useGoogleMapsRedirect from "@/hooks/useGoogleMapsRedirect";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
@@ -18,7 +19,7 @@ import {
   MAP_SOURCE_ID,
   SINGAPORE_BOUNDS_HINT,
   USER_LOCATION_ERROR_MESSAGE,
-  MAP_ERROR_DURATION_MS
+  MAP_ERROR_DURATION_MS,
 } from "@/core/constants/MapConstants";
 import UserLocationState from "@/core/types/map/UserLocationState";
 import MapError from "@/core/types/map/MapError";
@@ -29,8 +30,6 @@ type UseMapViewModelArgs = {
     longitude: number;
   };
 };
-
-
 
 export default function useMapViewModel({
   initialQueryLocation,
@@ -51,6 +50,8 @@ export default function useMapViewModel({
   const [userLocationState, setUserLocationState] =
     useState<UserLocationState | null>(null);
   const [mapErrors, setMapErrors] = useState<MapError[]>([]);
+  const { openGoogleMapsPin, openGoogleMapsDirections } =
+    useGoogleMapsRedirect();
 
   const addMapError = useCallback((message: string) => {
     const id = `${Date.now()}-${Math.random()}`;
@@ -215,6 +216,32 @@ export default function useMapViewModel({
     setSelectedRackId(null);
   }, []);
 
+  const handleOpenGoogleMaps = useCallback(
+    (rack: ParkingSpot) => {
+      const target = {
+        latitude: rack.lat,
+        longitude: rack.lng,
+      };
+
+      const opened = userLocationState
+        ? openGoogleMapsDirections(target, {
+            latitude: userLocationState.latitude,
+            longitude: userLocationState.longitude,
+          })
+        : openGoogleMapsPin(target);
+
+      if (!opened) {
+        addMapError("Unable to open Google Maps.");
+      }
+    },
+    [
+      addMapError,
+      openGoogleMapsDirections,
+      openGoogleMapsPin,
+      userLocationState,
+    ],
+  );
+
   const handleTileOverlayToggle = useCallback((enabled: boolean) => {
     setTileOverlayEnabled(enabled);
   }, []);
@@ -324,5 +351,6 @@ export default function useMapViewModel({
     handleMoveEnd,
     handleMapClick,
     handlePopupClose,
+    handleOpenGoogleMaps,
   };
 }

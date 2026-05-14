@@ -1,16 +1,18 @@
 import { Popup } from "react-map-gl/maplibre";
-import { Umbrella, UmbrellaOff } from "lucide-react";
+import { Navigation, Umbrella, UmbrellaOff } from "lucide-react";
 import ParkingSpot from "@/core/types/parking/ParkingSpot";
 import PopupSourceTag from "@/components/map/PopupSourceTag";
 
 interface BikeParkingPopupProps {
   rack: ParkingSpot;
   onClose: () => void;
+  onNavigate: (rack: ParkingSpot) => void;
 }
 
 export default function BikeParkingPopup({
   rack,
   onClose,
+  onNavigate,
 }: BikeParkingPopupProps) {
   return (
     <Popup
@@ -45,6 +47,14 @@ export default function BikeParkingPopup({
         <div className="mt-1 text-base">
           Type: {rack.parkingType == "" ? "Unknown" : rack.parkingType}
         </div>
+        <button
+          type="button"
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-md bg-sky-500 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-400"
+          onClick={() => onNavigate(rack)}
+        >
+          <Navigation size={16} />
+          Navigate
+        </button>
       </div>
     </Popup>
   );

@@ -41,6 +41,7 @@ export default function MapView({ vm }: MapViewProps) {
     handleMoveEnd,
     handleMapClick,
     handlePopupClose,
+    handleOpenGoogleMaps,
   } = vm;
 
   return (
@@ -121,7 +122,11 @@ export default function MapView({ vm }: MapViewProps) {
         )}
 
         {selectedRack && (
-          <BikeParkingPopup rack={selectedRack} onClose={handlePopupClose} />
+          <BikeParkingPopup
+            rack={selectedRack}
+            onClose={handlePopupClose}
+            onNavigate={handleOpenGoogleMaps}
+          />
         )}
 
         {userLocation && (

@@ -17,7 +17,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: MISSING_LATLNG_ERROR }, { status: 400 });
   }
 
-  const accountKey = process.env.LTA_PARKINGSPOT_API_KEY;
+  const accountKey = process.env.LTA_ACCOUNT_KEY;
 
   if (!accountKey) {
     return NextResponse.json({ error: MISSING_LTA_KEY_ERROR }, { status: 400 });
