@@ -3,10 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MapLayerMouseEvent, MapRef } from "react-map-gl/maplibre";
 import type { GeoJSONSource } from "maplibre-gl";
-import parseGeoInput from "@/utils/geo/parseGeoInput";
+import parseGeoInput from "@/utils/geocoding/parseGeoInput";
 import getTileId from "@/utils/tile/getTileId";
 import buildParkingSpotGeoJson from "@/utils/parking/buildParkingSpotGeoJson";
 import buildTileOverlay from "@/utils/tile/buildTileOverlay";
+import calculateHaversineDistance from "@/utils/parking/calculateHaversineDistance";
 import ParkingSpot from "@/core/types/parking/ParkingSpot";
 import useParkingSpots from "@/hooks/useParkingSpots";
 import useGeocodingSearch from "@/hooks/useGeocodingSearch";
@@ -45,18 +46,64 @@ export default function useMapViewModel({
   const queryTile = useRef<string>(
     getTileId(queryLocation.latitude, queryLocation.longitude),
   );
+
+  // Data states
   const mapRef = useRef<MapRef | null>(null);
   const locationWatchIdRef = useRef<number | null>(null);
   const [selectedRackId, setSelectedRackId] = useState<string | null>(null);
+
+  // UI states
   const [tileOverlayEnabled, setTileOverlayEnabled] = useState(false);
+  const [cyclingPathsEnabled, setCyclingPathsEnabled] = useState(false);
   const [userLocationState, setUserLocationState] =
     useState<UserLocationState | null>(null);
   const [mapErrors, setMapErrors] = useState<MapError[]>([]);
   const [searchInput, setSearchInput] = useState("");
-  const { geocodeResults, isGeocodeLoading, geocodeError } =
+
+  // Data fetching and memoized values
+  const { geocodeSearchResults, isGeocodeLoading, geocodeError } =
     useGeocodingSearch(searchInput);
   const { openGoogleMapsPin, openGoogleMapsDirections } =
     useGoogleMapsRedirect();
+
+  const { data, error, isLoading, fetchedTileIds } = useParkingSpots(
+    queryLocation.latitude,
+    queryLocation.longitude,
+  );
+
+  const racks: ParkingSpot[] = useMemo(() => data ?? [], [data]);
+
+  const parkingGeoJson = useMemo(() => buildParkingSpotGeoJson(racks), [racks]);
+
+  const tileGeoJson = useMemo(
+    () => buildTileOverlay(fetchedTileIds),
+    [fetchedTileIds],
+  );
+
+  const selectedRack = useMemo(
+    () => racks.find((rack) => rack.id === selectedRackId) ?? null,
+    [racks, selectedRackId],
+  );
+
+  const nearestSpots = useMemo(() => {
+    if (!userLocationState)
+      return racks as Array<ParkingSpot & { distance: number }>;
+    return racks
+      .map((r) => ({
+        ...r,
+        distance: calculateHaversineDistance(
+          userLocationState.latitude,
+          userLocationState.longitude,
+          r.lat,
+          r.lng,
+        ),
+      }))
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, 20);
+  }, [racks, userLocationState]);
+
+  // Internal helpers used by other callbacks.
+  // ---------------------------------------------------------------------------
 
   const addMapError = useCallback((message: string) => {
     const id = `${Date.now()}-${Math.random()}`;
@@ -69,27 +116,6 @@ export default function useMapViewModel({
       );
     }, MAP_ERROR_DURATION_MS);
   }, []);
-
-  const { data, error, isLoading, fetchedTileIds } = useParkingSpots(
-    queryLocation.latitude,
-    queryLocation.longitude,
-  );
-
-  const racks: ParkingSpot[] = useMemo(() => data ?? [], [data]);
-
-  const parkingGeoJson = useMemo(() => buildParkingSpotGeoJson(racks), [racks]);
-  const tileGeoJson = useMemo(
-    () => buildTileOverlay(fetchedTileIds),
-    [fetchedTileIds],
-  );
-
-  const selectedRack = useMemo(
-    () => racks.find((rack) => rack.id === selectedRackId) ?? null,
-    [racks, selectedRackId],
-  );
-
-  // Internal helpers used by other callbacks.
-  // ---------------------------------------------------------------------------
 
   const handleCameraMove = useCallback(
     (latitude: number, longitude: number) => {
@@ -212,14 +238,14 @@ export default function useMapViewModel({
       return true;
     }
 
-    if (geocodeResults.length > 0) {
-      handleOpenMapWithResult(geocodeResults[0]);
+    if (geocodeSearchResults.length > 0) {
+      handleOpenMapWithResult(geocodeSearchResults[0]);
       return true;
     }
 
     return false;
   }, [
-    geocodeResults,
+    geocodeSearchResults,
     handleMoveToCoordinates,
     handleOpenMapWithResult,
     searchInput,
@@ -304,6 +330,17 @@ export default function useMapViewModel({
 
   const handleTileOverlayToggle = useCallback((enabled: boolean) => {
     setTileOverlayEnabled(enabled);
+  }, []);
+
+  const handleCyclingPathsToggle = useCallback((enabled: boolean) => {
+    setCyclingPathsEnabled(enabled);
+    mapRef.current
+      ?.getMap()
+      .setLayoutProperty(
+        "tf-cycling-routes",
+        "visibility",
+        enabled ? "visible" : "none",
+      );
   }, []);
 
   const handleRequestUserLocation = useCallback(() => {
@@ -393,13 +430,26 @@ export default function useMapViewModel({
     };
   }, []);
 
+  const handleZoomToSpot = useCallback(
+    (spot: ParkingSpot & { distance?: number }) => {
+      setSelectedRackId(spot.id);
+      mapRef.current?.flyTo({
+        center: [spot.lng, spot.lat],
+        zoom: 16,
+        duration: FOCUS_DURATION,
+        essential: true,
+      });
+    },
+    [],
+  );
+
   return {
     racks,
     fetchedTileIds,
     isLoading,
     queryLocation,
     searchInput,
-    searchResults: geocodeResults,
+    geocodeSearchResults,
     geocodeError,
     isGeocodeLoading,
     handleMapSearch,
@@ -411,7 +461,12 @@ export default function useMapViewModel({
     selectedRack,
     tileOverlayEnabled,
     handleTileOverlayToggle,
-    userLocation: userLocationState,
+    cyclingPathsEnabled,
+    handleCyclingPathsToggle,
+    userLocationState,
+    nearestSpots,
+    hasUserLocation: !!userLocationState,
+    handleZoomToSpot,
     handleRequestUserLocation,
     tileGeoJson,
     parkingGeoJson,

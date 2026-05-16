@@ -37,13 +37,12 @@ export default function MapView({ vm }: MapViewProps) {
     parkingGeoJson,
     selectedRack,
     tileOverlayEnabled,
-    userLocation,
+    userLocationState,
     handleMoveEnd,
     handleMapClick,
     handlePopupClose,
     handleOpenGoogleMaps,
   } = vm;
-
   return (
     <div className="relative h-full w-full">
       <Map
@@ -89,7 +88,6 @@ export default function MapView({ vm }: MapViewProps) {
             />
           </Source>
         )}
-
         {parkingGeoJson.features.length > 0 && (
           <Source
             id={MAP_SOURCE_ID}
@@ -129,20 +127,20 @@ export default function MapView({ vm }: MapViewProps) {
           />
         )}
 
-        {userLocation && (
+        {userLocationState && (
           <Marker
-            longitude={userLocation.longitude}
-            latitude={userLocation.latitude}
+            longitude={userLocationState.longitude}
+            latitude={userLocationState.latitude}
             anchor="center"
           >
             <div className="relative flex h-8 w-8 items-center justify-center">
               <div className="h-6 w-6 rounded-full border-2 border-white bg-sky-500 shadow-md" />
               <div className="absolute h-8 w-8 rounded-full border-2 border-sky-400/50" />
-              {userLocation.heading != null && (
+              {userLocationState.heading != null && (
                 <div
                   className="absolute -top-3 left-1/2 h-3 w-1 -translate-x-1/2 rounded-full bg-sky-700"
                   style={{
-                    transform: `translateX(-50%) rotate(${userLocation.heading}deg)`,
+                    transform: `translateX(-50%) rotate(${userLocationState.heading}deg)`,
                   }}
                 />
               )}
