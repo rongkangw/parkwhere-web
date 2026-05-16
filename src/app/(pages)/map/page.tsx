@@ -11,7 +11,7 @@ import SearchBar from "@/components/ui/SearchBar";
 import useMainViewModel from "@/viewmodels/MainViewModel";
 import useMapViewModel from "@/viewmodels/MapViewModel";
 import SettingsMenu from "@/components/ui/SettingsMenu";
-import parseGeoInput from "@/utils/geo/parseGeoInput";
+import parseGeoInput from "@/utils/geocoding/parseGeoInput";
 
 export default function MapPage() {
   return (
@@ -49,7 +49,7 @@ function MapPageContent() {
     queryLocation,
     isLoading,
     searchInput,
-    searchResults,
+    geocodeSearchResults,
     geocodeError,
     isGeocodeLoading,
     handleSearchInputChange,
@@ -58,6 +58,8 @@ function MapPageContent() {
     mapErrors,
     tileOverlayEnabled,
     handleTileOverlayToggle,
+    cyclingPathsEnabled,
+    handleCyclingPathsToggle,
     handleRequestUserLocation,
   } = mapVM;
 
@@ -75,7 +77,7 @@ function MapPageContent() {
               onChangeValue={handleSearchInputChange}
               onEnter={handleOpenMapFromEnter}
               placeholder="Search a place or its coordinates"
-              searchResults={searchResults}
+              searchResults={geocodeSearchResults}
               isGeocodeLoading={isGeocodeLoading}
               geocodeError={geocodeError}
               onSelectResult={selectGeocodeResult}
@@ -121,6 +123,8 @@ function MapPageContent() {
           <SettingsMenu
             tileOverlayEnabled={tileOverlayEnabled}
             onTileOverlayToggle={handleTileOverlayToggle}
+            cyclingPathsEnabled={cyclingPathsEnabled}
+            onCyclingPathsToggle={handleCyclingPathsToggle}
           />
         </div>
       </div>

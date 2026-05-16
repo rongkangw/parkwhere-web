@@ -20,10 +20,10 @@ export default function MainPage() {
     <main className="flex h-screen w-screen items-center justify-center bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 p-6 text-white">
       <section className="w-full max-w-xl rounded-2xl border border-white/10 bg-slate-900/70 p-8 shadow-2xl backdrop-blur">
         <h1 className="w-full text-center text-3xl font-bold tracking-tight">
-          Welcome to ParkWhere
+          Welcome to ParkWhere!
         </h1>
         <p className="mt-3 w-full text-center text-sm text-slate-300">
-          Enter your geolocation to start near you.
+          Enter a location to start.
         </p>
 
         <div className="mt-6">
