@@ -4,7 +4,7 @@ import {
   MIN_LAT,
   MIN_LNG,
   TILE_SIZE,
-} from "@/core/constants/MapConstants";
+} from "@/core/constants/ui/MapConstants";
 import type { FeatureCollection, Polygon } from "geojson";
 
 export default function buildTileOverlay(

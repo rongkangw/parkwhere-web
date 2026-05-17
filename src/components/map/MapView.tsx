@@ -1,12 +1,17 @@
 "use client";
 
-import Map, { Layer, Marker, Source } from "react-map-gl/maplibre";
+import Map, {
+  AttributionControl,
+  Layer,
+  Marker,
+  Source,
+} from "react-map-gl/maplibre";
 import {
   bikeParkingClusterCountLayout,
   bikeParkingClusterCountPaint,
   bikeParkingClusterLayerPaint,
   bikeParkingLayerPaint,
-} from "@/core/constants/MapMarkerLayerStyle";
+} from "@/core/constants/style/MapMarkerLayerStyle";
 import BikeParkingPopup from "@/components/map/ParkingDetailPopup";
 
 import {
@@ -21,9 +26,11 @@ import {
   MAP_SOURCE_ID,
   MIN_LAT,
   MIN_LNG,
-} from "@/core/constants/MapConstants";
+} from "@/core/constants/ui/MapConstants";
 import useMapViewModel from "@/viewmodels/MapViewModel";
-import { mapStyle } from "@/core/constants/MapStyle";
+import { mapStyle } from "@/core/constants/style/MapStyle";
+
+const MAP_ATTRIBUTION = "© Singapore Land Authority, OneMap | © Thunderforest";
 
 type MapViewProps = {
   vm: ReturnType<typeof useMapViewModel>;
@@ -37,13 +44,12 @@ export default function MapView({ vm }: MapViewProps) {
     parkingGeoJson,
     selectedRack,
     tileOverlayEnabled,
-    userLocation,
+    userLocationState,
     handleMoveEnd,
     handleMapClick,
     handlePopupClose,
     handleOpenGoogleMaps,
   } = vm;
-
   return (
     <div className="relative h-full w-full">
       <Map
@@ -60,7 +66,7 @@ export default function MapView({ vm }: MapViewProps) {
           [MIN_LNG, MIN_LAT],
           [MAX_LNG, MAX_LAT],
         ]}
-        attributionControl={false} // logo is not required
+        attributionControl={false}
         interactiveLayerIds={[MAP_LAYER_ID, MAP_CLUSTER_LAYER_ID]}
         onMoveEnd={handleMoveEnd}
       >
@@ -89,7 +95,6 @@ export default function MapView({ vm }: MapViewProps) {
             />
           </Source>
         )}
-
         {parkingGeoJson.features.length > 0 && (
           <Source
             id={MAP_SOURCE_ID}
@@ -129,26 +134,30 @@ export default function MapView({ vm }: MapViewProps) {
           />
         )}
 
-        {userLocation && (
+        {userLocationState && (
           <Marker
-            longitude={userLocation.longitude}
-            latitude={userLocation.latitude}
+            longitude={userLocationState.longitude}
+            latitude={userLocationState.latitude}
             anchor="center"
           >
             <div className="relative flex h-8 w-8 items-center justify-center">
               <div className="h-6 w-6 rounded-full border-2 border-white bg-sky-500 shadow-md" />
               <div className="absolute h-8 w-8 rounded-full border-2 border-sky-400/50" />
-              {userLocation.heading != null && (
+              {userLocationState.heading != null && (
                 <div
                   className="absolute -top-3 left-1/2 h-3 w-1 -translate-x-1/2 rounded-full bg-sky-700"
                   style={{
-                    transform: `translateX(-50%) rotate(${userLocation.heading}deg)`,
+                    transform: `translateX(-50%) rotate(${userLocationState.heading}deg)`,
                   }}
                 />
               )}
             </div>
           </Marker>
         )}
+        <AttributionControl
+          position="top-right"
+          customAttribution={MAP_ATTRIBUTION}
+        />
       </Map>
     </div>
   );

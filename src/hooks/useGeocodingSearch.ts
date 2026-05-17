@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import parseGeoInput from "@/utils/geo/parseGeoInput";
+import parseGeoInput from "@/utils/geocoding/parseGeoInput";
 import fetchGeocodeResults, {
   OneMapGeocodeResult,
 } from "@/services/geocoding/fetchGeocodeResults";
 
 type UseGeocodingSearchResult = {
-  geocodeResults: OneMapGeocodeResult[];
+  geocodeSearchResults: OneMapGeocodeResult[];
   isGeocodeLoading: boolean;
   geocodeError: string | null;
 };
@@ -13,9 +13,9 @@ type UseGeocodingSearchResult = {
 export default function useGeocodingSearch(
   searchValue: string,
 ): UseGeocodingSearchResult {
-  const [geocodeResults, setGeocodeResults] = useState<OneMapGeocodeResult[]>(
-    [],
-  );
+  const [geocodeSearchResults, setGeocodeSearchResults] = useState<
+    OneMapGeocodeResult[]
+  >([]);
   const [isGeocodeLoading, setIsGeocodeLoading] = useState(false);
   const [geocodeError, setGeocodeError] = useState<string | null>(null);
 
@@ -25,7 +25,7 @@ export default function useGeocodingSearch(
 
     // ignore empty or coordinate inputs
     if (!trimmedSearchValue || isCoordinateInput) {
-      setGeocodeResults([]);
+      setGeocodeSearchResults([]);
       setGeocodeError(null);
       setIsGeocodeLoading(false);
       return;
@@ -41,7 +41,7 @@ export default function useGeocodingSearch(
           trimmedSearchValue,
           abortController.signal,
         );
-        setGeocodeResults(geocodeResults.slice(0, 8));
+        setGeocodeSearchResults(geocodeResults.slice(0, 8));
       } catch (error) {
         if (abortController.signal.aborted) {
           console.info(
@@ -49,7 +49,7 @@ export default function useGeocodingSearch(
           );
           return;
         }
-        setGeocodeResults([]);
+        setGeocodeSearchResults([]);
         setGeocodeError(
           error instanceof Error ? error.message : "Failed to fetch places",
         );
@@ -67,7 +67,7 @@ export default function useGeocodingSearch(
   }, [searchValue]);
 
   return {
-    geocodeResults,
+    geocodeSearchResults,
     isGeocodeLoading,
     geocodeError,
   };

@@ -2,16 +2,17 @@
 
 import { Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { LocateFixed } from "lucide-react";
+import { Home, LocateFixed } from "lucide-react";
 import MapStatusPopup from "@/components/map/MapStatusPopup";
 import MapView from "@/components/map/MapView";
-import BackButton from "@/components/ui/BackButton";
 import LatLngIndicator from "@/components/ui/LatLngIndicator";
 import SearchBar from "@/components/ui/SearchBar";
 import useMainViewModel from "@/viewmodels/MainViewModel";
 import useMapViewModel from "@/viewmodels/MapViewModel";
 import SettingsMenu from "@/components/ui/SettingsMenu";
-import parseGeoInput from "@/utils/geo/parseGeoInput";
+import NearestSpotsSidebar from "@/components/ui/NearestSpotsSidebar";
+import parseGeoInput from "@/utils/geocoding/parseGeoInput";
+import DeveloperNote from "@/components/ui/DeveloperNote";
 
 export default function MapPage() {
   return (
@@ -49,7 +50,7 @@ function MapPageContent() {
     queryLocation,
     isLoading,
     searchInput,
-    searchResults,
+    geocodeSearchResults,
     geocodeError,
     isGeocodeLoading,
     handleSearchInputChange,
@@ -58,24 +59,25 @@ function MapPageContent() {
     mapErrors,
     tileOverlayEnabled,
     handleTileOverlayToggle,
+    cyclingPathsEnabled,
+    handleCyclingPathsToggle,
     handleRequestUserLocation,
+    nearestSpots,
+    hasUserLocation,
+    handleZoomToSpot,
   } = mapVM;
 
   return (
     <main className="h-screen w-screen">
       <div className="fixed top-4 z-20 w-full">
-        <div className="relative flex w-full items-center px-2">
-          <div className="mr-auto">
-            <BackButton onClick={handleBackToHome} />
-          </div>
-
-          <div className="pointer-events-auto absolute left-1/2 w-[60vw] max-w-[60vw] min-w-56 -translate-x-1/2">
+        <div className="flex w-full justify-center px-2">
+          <div className="pointer-events-auto w-[60vw] max-w-[60vw] min-w-56">
             <SearchBar
               searchValue={searchInput}
               onChangeValue={handleSearchInputChange}
               onEnter={handleOpenMapFromEnter}
               placeholder="Search a place or its coordinates"
-              searchResults={searchResults}
+              searchResults={geocodeSearchResults}
               isGeocodeLoading={isGeocodeLoading}
               geocodeError={geocodeError}
               onSelectResult={selectGeocodeResult}
@@ -113,6 +115,14 @@ function MapPageContent() {
           />
           <button
             type="button"
+            onClick={handleBackToHome}
+            className="ui-floating-btn z-10 p-2"
+            aria-label="Back to home"
+          >
+            <Home size={20} />
+          </button>
+          <button
+            type="button"
             onClick={handleRequestUserLocation}
             className="ui-floating-btn z-10 p-2"
           >
@@ -121,11 +131,20 @@ function MapPageContent() {
           <SettingsMenu
             tileOverlayEnabled={tileOverlayEnabled}
             onTileOverlayToggle={handleTileOverlayToggle}
+            cyclingPathsEnabled={cyclingPathsEnabled}
+            onCyclingPathsToggle={handleCyclingPathsToggle}
           />
         </div>
       </div>
 
+      <NearestSpotsSidebar
+        spots={nearestSpots}
+        hasUserLocation={hasUserLocation}
+        onSelectSpot={handleZoomToSpot}
+      />
+
       <MapView vm={mapVM} />
+      <DeveloperNote />
     </main>
   );
 }

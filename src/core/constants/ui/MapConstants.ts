@@ -24,3 +24,6 @@ export const MAP_CLUSTER_RADIUS = 48;
 
 export const USER_LOCATION_ERROR_MESSAGE = "Unable to get user location";
 export const MAP_ERROR_DURATION_MS = 5000;
+
+export const MAP_ATTRIBUTION =
+  "© Singapore Land Authority, OneMap | © Thunderforest";

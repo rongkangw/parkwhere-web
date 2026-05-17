@@ -5,11 +5,15 @@ import { SettingsMenuRow } from "@/components/ui/SettingsMenuRow";
 type SettingsMenuProps = {
   tileOverlayEnabled: boolean;
   onTileOverlayToggle: (enabled: boolean) => void;
+  cyclingPathsEnabled: boolean;
+  onCyclingPathsToggle: (enabled: boolean) => void;
 };
 
 export default function SettingsMenu({
   tileOverlayEnabled,
   onTileOverlayToggle,
+  cyclingPathsEnabled,
+  onCyclingPathsToggle,
 }: SettingsMenuProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -25,6 +29,11 @@ export default function SettingsMenu({
       </button>
       {isExpanded && (
         <div className="ui-floating-surface absolute right-0 bottom-full z-10 mb-2 w-56 p-2">
+          <SettingsMenuRow
+            settingName="Show Cycling Paths"
+            toggleValue={cyclingPathsEnabled}
+            onToggle={onCyclingPathsToggle}
+          />
           <SettingsMenuRow
             settingName="Show Tile Overlay"
             toggleValue={tileOverlayEnabled}

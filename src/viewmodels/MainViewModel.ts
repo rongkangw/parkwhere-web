@@ -9,8 +9,11 @@ export default function useMainViewModel() {
   const router = useRouter();
   const [searchInput, setSearchInput] = useState("");
   const [searchResults, setSearchResults] = useState<OneMapGeocodeResult[]>([]);
-  const { geocodeResults, isGeocodeLoading, geocodeError } =
-    useGeocodingSearch(searchInput);
+  const {
+    geocodeSearchResults: geocodeResults,
+    isGeocodeLoading,
+    geocodeError,
+  } = useGeocodingSearch(searchInput);
 
   useEffect(() => {
     setSearchResults(geocodeResults);
