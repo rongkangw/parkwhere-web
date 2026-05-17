@@ -38,7 +38,7 @@ export default function NearestSpotsSidebar({
       </button>
 
       <div
-        className="fixed top-0 z-30 h-full w-80 overflow-hidden bg-white shadow-lg"
+        className="ui-floating-surface fixed top-0 z-30 h-full w-80 overflow-hidden"
         style={{
           left: isExpanded ? "0" : "-20rem",
           transition: "left 300ms ease-in-out",
@@ -48,6 +48,9 @@ export default function NearestSpotsSidebar({
         <div className="flex h-full flex-col">
           <div className="border-b border-slate-200 px-4 py-3">
             <h3 className="text-lg font-semibold">Nearby Parking</h3>
+            <div className="mt-1 text-xs text-slate-500">
+              Only the top 20 results are shown.
+            </div>
           </div>
           <div className="flex-1 overflow-y-auto p-4">
             {hasParkingSpots ? (

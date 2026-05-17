@@ -1,5 +1,6 @@
 "use client";
 
+import DeveloperNote from "@/components/ui/DeveloperNote";
 import SearchBar from "@/components/ui/SearchBar";
 import useMainViewModel from "@/viewmodels/MainViewModel";
 
@@ -47,6 +48,7 @@ export default function MainPage() {
           Go directly to map
         </button>
       </section>
+      <DeveloperNote />
     </main>
   );
 }

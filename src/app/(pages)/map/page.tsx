@@ -12,6 +12,7 @@ import useMapViewModel from "@/viewmodels/MapViewModel";
 import SettingsMenu from "@/components/ui/SettingsMenu";
 import NearestSpotsSidebar from "@/components/ui/NearestSpotsSidebar";
 import parseGeoInput from "@/utils/geocoding/parseGeoInput";
+import DeveloperNote from "@/components/ui/DeveloperNote";
 
 export default function MapPage() {
   return (
@@ -143,6 +144,7 @@ function MapPageContent() {
       />
 
       <MapView vm={mapVM} />
+      <DeveloperNote />
     </main>
   );
 }

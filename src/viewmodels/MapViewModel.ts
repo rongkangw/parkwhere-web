@@ -23,9 +23,10 @@ import {
   SINGAPORE_BOUNDS_HINT,
   USER_LOCATION_ERROR_MESSAGE,
   MAP_ERROR_DURATION_MS,
-} from "@/core/constants/MapConstants";
+} from "@/core/constants/ui/MapConstants";
 import UserLocationState from "@/core/types/map/UserLocationState";
 import MapError from "@/core/types/map/MapError";
+import { SIDEBAR_MAX_DISPLAYED_SPOTS } from "@/core/constants/ui/UiConstants";
 
 type UseMapViewModelArgs = {
   initialQueryLocation?: {
@@ -87,7 +88,9 @@ export default function useMapViewModel({
 
   const nearestSpots = useMemo(() => {
     if (!userLocationState)
-      return racks as Array<ParkingSpot & { distance: number }>;
+      return racks.slice(0, SIDEBAR_MAX_DISPLAYED_SPOTS) as Array<
+        ParkingSpot & { distance: number }
+      >;
     return racks
       .map((r) => ({
         ...r,
@@ -99,7 +102,7 @@ export default function useMapViewModel({
         ),
       }))
       .sort((a, b) => a.distance - b.distance)
-      .slice(0, 20);
+      .slice(0, SIDEBAR_MAX_DISPLAYED_SPOTS);
   }, [racks, userLocationState]);
 
   // Internal helpers used by other callbacks.

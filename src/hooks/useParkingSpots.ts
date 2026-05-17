@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef } from "react";
 import {
   DEFAULT_QUERY_DISTANCE,
   DEFAULT_QUERY_DISTANCE_METERS,
-} from "@/core/constants/MapConstants";
+} from "@/core/constants/ui/MapConstants";
 import fetchOnlineSpots from "@/services/parking/fetchOnlineSpots";
 import fetchDbSpots from "@/services/db/fetchDbSpots";
 import ParkingSpot from "@/core/types/parking/ParkingSpot";

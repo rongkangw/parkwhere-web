@@ -11,7 +11,7 @@ import {
   bikeParkingClusterCountPaint,
   bikeParkingClusterLayerPaint,
   bikeParkingLayerPaint,
-} from "@/core/constants/MapMarkerLayerStyle";
+} from "@/core/constants/style/MapMarkerLayerStyle";
 import BikeParkingPopup from "@/components/map/ParkingDetailPopup";
 
 import {
@@ -26,9 +26,9 @@ import {
   MAP_SOURCE_ID,
   MIN_LAT,
   MIN_LNG,
-} from "@/core/constants/MapConstants";
+} from "@/core/constants/ui/MapConstants";
 import useMapViewModel from "@/viewmodels/MapViewModel";
-import { mapStyle } from "@/core/constants/MapStyle";
+import { mapStyle } from "@/core/constants/style/MapStyle";
 
 const MAP_ATTRIBUTION = "© Singapore Land Authority, OneMap | © Thunderforest";
 

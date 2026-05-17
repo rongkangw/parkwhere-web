@@ -3,7 +3,7 @@ import {
   MAX_LNG,
   MIN_LAT,
   MIN_LNG,
-} from "@/core/constants/MapConstants";
+} from "@/core/constants/ui/MapConstants";
 
 export default function parseGeoInput(
   rawValue: string,
