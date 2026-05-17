@@ -43,11 +43,7 @@ export const mapStyle: StyleSpecification = {
           17,
           5,
         ],
-        "line-opacity": 0.9,
       },
     },
   ],
-  metadata: {
-    attribution: "© Singapore Land Authority, OneMap",
-  },
 };

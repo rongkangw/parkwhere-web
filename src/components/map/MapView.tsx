@@ -1,6 +1,11 @@
 "use client";
 
-import Map, { Layer, Marker, Source } from "react-map-gl/maplibre";
+import Map, {
+  AttributionControl,
+  Layer,
+  Marker,
+  Source,
+} from "react-map-gl/maplibre";
 import {
   bikeParkingClusterCountLayout,
   bikeParkingClusterCountPaint,
@@ -24,6 +29,8 @@ import {
 } from "@/core/constants/MapConstants";
 import useMapViewModel from "@/viewmodels/MapViewModel";
 import { mapStyle } from "@/core/constants/MapStyle";
+
+const MAP_ATTRIBUTION = "© Singapore Land Authority, OneMap | © Thunderforest";
 
 type MapViewProps = {
   vm: ReturnType<typeof useMapViewModel>;
@@ -59,7 +66,7 @@ export default function MapView({ vm }: MapViewProps) {
           [MIN_LNG, MIN_LAT],
           [MAX_LNG, MAX_LAT],
         ]}
-        attributionControl={false} // logo is not required
+        attributionControl={false}
         interactiveLayerIds={[MAP_LAYER_ID, MAP_CLUSTER_LAYER_ID]}
         onMoveEnd={handleMoveEnd}
       >
@@ -147,6 +154,10 @@ export default function MapView({ vm }: MapViewProps) {
             </div>
           </Marker>
         )}
+        <AttributionControl
+          position="top-right"
+          customAttribution={MAP_ATTRIBUTION}
+        />
       </Map>
     </div>
   );
