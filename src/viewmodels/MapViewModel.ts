@@ -38,6 +38,10 @@ type UseMapViewModelArgs = {
 export default function useMapViewModel({
   initialQueryLocation,
 }: UseMapViewModelArgs = {}) {
+  // Data states
+  const mapRef = useRef<MapRef | null>(null);
+  const locationWatchIdRef = useRef<number | null>(null);
+  const [selectedRackId, setSelectedRackId] = useState<string | null>(null);
   const [queryLocation, setQueryLocation] = useState(
     initialQueryLocation ?? {
       latitude: DEFAULT_LATITUDE,
@@ -47,11 +51,6 @@ export default function useMapViewModel({
   const queryTile = useRef<string>(
     getTileId(queryLocation.latitude, queryLocation.longitude),
   );
-
-  // Data states
-  const mapRef = useRef<MapRef | null>(null);
-  const locationWatchIdRef = useRef<number | null>(null);
-  const [selectedRackId, setSelectedRackId] = useState<string | null>(null);
 
   // UI states
   const [tileOverlayEnabled, setTileOverlayEnabled] = useState(false);
@@ -87,23 +86,21 @@ export default function useMapViewModel({
   );
 
   const nearestSpots = useMemo(() => {
-    if (!userLocationState)
-      return racks.slice(0, SIDEBAR_MAX_DISPLAYED_SPOTS) as Array<
-        ParkingSpot & { distance: number }
-      >;
+    const baseLat = userLocationState
+      ? userLocationState.latitude
+      : queryLocation.latitude;
+    const baseLng = userLocationState
+      ? userLocationState.longitude
+      : queryLocation.longitude;
+
     return racks
       .map((r) => ({
         ...r,
-        distance: calculateHaversineDistance(
-          userLocationState.latitude,
-          userLocationState.longitude,
-          r.lat,
-          r.lng,
-        ),
+        distance: calculateHaversineDistance(baseLat, baseLng, r.lat, r.lng),
       }))
       .sort((a, b) => a.distance - b.distance)
       .slice(0, SIDEBAR_MAX_DISPLAYED_SPOTS);
-  }, [racks, userLocationState]);
+  }, [racks, userLocationState, queryLocation]);
 
   // Internal helpers used by other callbacks.
   // ---------------------------------------------------------------------------
