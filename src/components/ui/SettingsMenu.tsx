@@ -5,6 +5,7 @@ import { SettingsMenuRow } from "@/components/ui/SettingsMenuRow";
 type SettingsMenuProps = {
   tileOverlayEnabled: boolean;
   onTileOverlayToggle: (enabled: boolean) => void;
+  showTileOverlayToggle: boolean;
   cyclingPathsEnabled: boolean;
   onCyclingPathsToggle: (enabled: boolean) => void;
 };
@@ -12,6 +13,7 @@ type SettingsMenuProps = {
 export default function SettingsMenu({
   tileOverlayEnabled,
   onTileOverlayToggle,
+  showTileOverlayToggle,
   cyclingPathsEnabled,
   onCyclingPathsToggle,
 }: SettingsMenuProps) {
@@ -34,11 +36,13 @@ export default function SettingsMenu({
             toggleValue={cyclingPathsEnabled}
             onToggle={onCyclingPathsToggle}
           />
-          <SettingsMenuRow
-            settingName="Show Tile Overlay"
-            toggleValue={tileOverlayEnabled}
-            onToggle={onTileOverlayToggle}
-          />
+          {showTileOverlayToggle && (
+            <SettingsMenuRow
+              settingName="Show Tile Overlay"
+              toggleValue={tileOverlayEnabled}
+              onToggle={onTileOverlayToggle}
+            />
+          )}
         </div>
       )}
     </div>

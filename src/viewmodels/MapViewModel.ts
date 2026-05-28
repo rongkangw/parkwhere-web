@@ -38,6 +38,8 @@ type UseMapViewModelArgs = {
 export default function useMapViewModel({
   initialQueryLocation,
 }: UseMapViewModelArgs = {}) {
+  const isProduction = process.env.NODE_ENV === "production";
+
   // Data states
   const mapRef = useRef<MapRef | null>(null);
   const locationWatchIdRef = useRef<number | null>(null);
@@ -76,8 +78,8 @@ export default function useMapViewModel({
   const parkingGeoJson = useMemo(() => buildParkingSpotGeoJson(racks), [racks]);
 
   const tileGeoJson = useMemo(
-    () => buildTileOverlay(fetchedTileIds),
-    [fetchedTileIds],
+    () => (isProduction ? null : buildTileOverlay(fetchedTileIds)),
+    [fetchedTileIds, isProduction],
   );
 
   const selectedRack = useMemo(
@@ -328,9 +330,16 @@ export default function useMapViewModel({
     ],
   );
 
-  const handleTileOverlayToggle = useCallback((enabled: boolean) => {
-    setTileOverlayEnabled(enabled);
-  }, []);
+  const handleTileOverlayToggle = useCallback(
+    (enabled: boolean) => {
+      if (isProduction) {
+        return;
+      }
+
+      setTileOverlayEnabled(enabled);
+    },
+    [isProduction],
+  );
 
   const handleCyclingPathsToggle = useCallback((enabled: boolean) => {
     setCyclingPathsEnabled(enabled);
@@ -460,6 +469,7 @@ export default function useMapViewModel({
     mapRef,
     selectedRack,
     tileOverlayEnabled,
+    showTileOverlayToggle: !isProduction,
     handleTileOverlayToggle,
     cyclingPathsEnabled,
     handleCyclingPathsToggle,
