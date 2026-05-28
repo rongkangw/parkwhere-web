@@ -1,5 +1,8 @@
 # 🚲 ParkWhere
 
+![alt text](/images/coverImage1.png)
+![alt text](/images/coverImage2.png)
+
 ## What It Does
 
 ParkWhere shows you available bicycle parking spots near you on an interactive map. Search for a location (or use your current one) and instantly see all the parking options around you.
@@ -34,18 +37,18 @@ src/
 
 ## Current features
 
-- Loads bicycle parking data using [LTA Datamall's API service](https://datamall.lta.gov.sg/content/datamall/en/dynamic-data.html)
-- Utilizes PostgreSQL (Neon) for persisted spot/tile status
-- Interactive MapLibre map with marker layers and detail popups
-- Client-side caching and fetching via React Query
+- Displays bicycle parking spots fetched from LTA's API
+- Interactive map with marker layers and detail popups
+- Filtering based on searched location or current location
+- Toggleable overlay for nearby cycling paths/bike lanes
+- Linked navigation to parking spots via Google Maps
 
 ## Planned/Future Features
 
-- [ ] Crowdsourced spot availability updates
-- [ ] Additional data layers (e.g., bike lanes, repair shops)
-- [ ] Linked navigation to parking spots via Google Maps/Apple Maps
-- [ ] User reviews and ratings for parking spots
-- [ ] Better mobile compatibility (currently does not support mobile browsers well)
+- [ ] Filter by parking type (e.g. covered, uncovered, rack, etc)
+- [ ] Crowdsourced spot availability, user reviews, ratings and images
+- [ ] Additional data layers (e.g. repair shops, cycling-related POIs)
+- [ ] Better mobile compatibility and performance optimizations
 
 ## Local Setup
 
@@ -92,11 +95,13 @@ npm run dev
 
 - Developed using **React** + **TypeScript**
 - **Next.js** (App Router)
-- **MapLibre GL** + **react-map-gl** for the map
+- **MapLibre GL** for the map
 - **Vercel** for deployment
-- **React Query** for data fetching
+- **TanStack Query** for data fetching
 - **Tailwind CSS** for styling
 - **PostgreSQL (Neon)** for data storage
+- **[LTA Datamall API](https://datamall.lta.gov.sg/content/datamall/en/dynamic-data.html)** for parking spot data
+- **[OneMap API](https://www.onemap.gov.sg/apidocs/)** for reverse geocoding
 
 ## Feedback
 
