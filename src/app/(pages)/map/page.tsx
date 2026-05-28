@@ -58,6 +58,7 @@ function MapPageContent() {
     selectGeocodeResult,
     mapErrors,
     tileOverlayEnabled,
+    showTileOverlayToggle,
     handleTileOverlayToggle,
     cyclingPathsEnabled,
     handleCyclingPathsToggle,
@@ -131,6 +132,7 @@ function MapPageContent() {
           <SettingsMenu
             tileOverlayEnabled={tileOverlayEnabled}
             onTileOverlayToggle={handleTileOverlayToggle}
+            showTileOverlayToggle={showTileOverlayToggle}
             cyclingPathsEnabled={cyclingPathsEnabled}
             onCyclingPathsToggle={handleCyclingPathsToggle}
           />
