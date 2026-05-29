@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { OneMapGeocodeResult } from "@/services/geocoding/fetchGeocodeResults";
+import { OneMapGeocodeResult } from "@/services/external/fetchGeocodeResults";
 
 type SearchBarProps = {
   placeholder?: string;

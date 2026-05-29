@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import parseGeoInput from "@/utils/geocoding/parseGeoInput";
 import fetchGeocodeResults, {
   OneMapGeocodeResult,
-} from "@/services/geocoding/fetchGeocodeResults";
+} from "@/services/external/fetchGeocodeResults";
 
 type UseGeocodingSearchResult = {
   geocodeSearchResults: OneMapGeocodeResult[];

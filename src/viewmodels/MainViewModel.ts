@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import useGeocodingSearch from "@/hooks/useGeocodingSearch";
-import { OneMapGeocodeResult } from "@/services/geocoding/fetchGeocodeResults";
+import { OneMapGeocodeResult } from "@/services/external/fetchGeocodeResults";
 
 export default function useMainViewModel() {
   const router = useRouter();

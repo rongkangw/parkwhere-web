@@ -12,7 +12,7 @@ import ParkingSpot from "@/core/types/parking/ParkingSpot";
 import useParkingSpots from "@/hooks/useParkingSpots";
 import useGeocodingSearch from "@/hooks/useGeocodingSearch";
 import useGoogleMapsRedirect from "@/hooks/useGoogleMapsRedirect";
-import { OneMapGeocodeResult } from "@/services/geocoding/fetchGeocodeResults";
+import { OneMapGeocodeResult } from "@/services/external/fetchGeocodeResults";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
@@ -368,9 +368,11 @@ export default function useMapViewModel({
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        console.log("User location obtained:", position);
         updateUserLocation(position, true);
       },
-      () => {
+      (err) => {
+        console.error("Error obtaining user location:", err);
         addMapError(USER_LOCATION_ERROR_MESSAGE);
 
         if (locationWatchIdRef.current != null && navigator.geolocation) {

@@ -4,7 +4,7 @@ import {
   DEFAULT_QUERY_DISTANCE,
   DEFAULT_QUERY_DISTANCE_METERS,
 } from "@/core/constants/ui/MapConstants";
-import fetchOnlineSpots from "@/services/parking/fetchOnlineSpots";
+import fetchOnlineSpots from "@/services/external/fetchOnlineSpots";
 import fetchDbSpots from "@/services/db/fetchDbSpots";
 import ParkingSpot from "@/core/types/parking/ParkingSpot";
 import getTileId from "@/utils/tile/getTileId";
