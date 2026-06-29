@@ -35,9 +35,11 @@ export default async function fetchOnlineSpots(
     lat: Number(spot.Latitude),
     lng: Number(spot.Longitude),
     capacity: Number(spot.RackCount ?? 0),
-    occupancy: 0, // Datamall doesn't provide real-time occupancy; set to 0
     parkingType: String(spot.RackType ?? ""),
     sheltered: spot.ShelterIndicator === "Y",
     sourceType: "official",
+    upvotes: 0,
+    downvotes: 0,
+    status: "none",
   }));
 }

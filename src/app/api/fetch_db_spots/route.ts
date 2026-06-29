@@ -6,13 +6,15 @@ import { neon } from "@neondatabase/serverless";
 type DbRackRow = {
   uniqueid: string;
   name: string;
-  occupancy: number;
   capacity: number;
   sheltered: boolean;
   racktype: string;
   type: string;
   lat: number;
   lng: number;
+  upvotes: number;
+  downvotes: number;
+  status: string;
 };
 
 export async function GET(request: NextRequest) {
@@ -54,15 +56,18 @@ export async function GET(request: NextRequest) {
       SELECT
           uniqueid,
           name,
-          occupancy,
           capacity,
           sheltered,
           racktype,
+          upvotes,
+          downvotes,
+          status,
           type,
           ST_Y(location::geometry) AS lat,
           ST_X(location::geometry) AS lng
       FROM parking_spots
-      WHERE ST_DWithin(
+      WHERE is_active
+        AND ST_DWithin(
           location,
           ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326),
           ${dist}

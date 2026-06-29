@@ -7,5 +7,7 @@ export default interface ParkingSpotDbResponse {
   parkingtype: string;
   sourcetype: string;
   capacity: number;
-  occupancy: number;
+  upvotes: number;
+  downvotes: number;
+  status: string;
 }

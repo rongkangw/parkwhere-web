@@ -35,10 +35,17 @@ export default async function fetchDbSpots(
       lat: Number(spot.lat ?? 0),
       lng: Number(spot.lng ?? 0),
       capacity: Number(spot.capacity ?? 0),
-      occupancy: Number(spot.occupancy ?? 0),
       parkingType: String(spot.parkingtype ?? ""),
       sheltered: Boolean(spot.sheltered ?? false),
       sourceType: spot.sourcetype === "community" ? "community" : "official",
+      upvotes: Number(spot.upvotes ?? 0),
+      downvotes: Number(spot.downvotes ?? 0),
+      status:
+        spot.status === "full"
+          ? "full"
+          : spot.status === "missing"
+            ? "missing"
+            : "none",
     }),
   );
 }

@@ -8,11 +8,13 @@ import getTileId from "@/utils/tile/getTileId";
 import buildParkingSpotGeoJson from "@/utils/parking/buildParkingSpotGeoJson";
 import buildTileOverlay from "@/utils/tile/buildTileOverlay";
 import calculateHaversineDistance from "@/utils/parking/calculateHaversineDistance";
-import ParkingSpot from "@/core/types/parking/ParkingSpot";
+import ParkingSpot, { VoteDirection } from "@/core/types/parking/ParkingSpot";
 import useParkingSpots from "@/hooks/useParkingSpots";
 import useGeocodingSearch from "@/hooks/useGeocodingSearch";
 import useGoogleMapsRedirect from "@/hooks/useGoogleMapsRedirect";
 import { OneMapGeocodeResult } from "@/services/external/fetchGeocodeResults";
+import useVoteParkingSpot from "@/hooks/useVoteParkingSpot";
+
 import UserLocationState from "@/core/types/map/UserLocationState";
 import MapError from "@/core/types/map/MapError";
 import {
@@ -20,15 +22,13 @@ import {
   DEFAULT_LONGITUDE,
   FOCUS_DURATION,
   MAP_CLUSTER_LAYER_ID,
+  MAP_ERROR_DURATION_MS,
   MAP_LAYER_ID,
   MAP_SOURCE_ID,
-  SINGAPORE_BOUNDS_HINT,
+  SIDEBAR_MAX_DISPLAYED_SPOTS,
   USER_LOCATION_ERROR_MESSAGE,
-  MAP_ERROR_DURATION_MS,
-} from "@/core/constants/ui/MapConstants";
-import UserLocationState from "@/core/types/map/UserLocationState";
-import MapError from "@/core/types/map/MapError";
-import { SIDEBAR_MAX_DISPLAYED_SPOTS } from "@/core/constants/ui/UiConstants";
+} from "@/core/constants/UiConstants";
+import { loadVoteState } from "@/services/local/fetchLocalSpotVote";
 
 type UseMapViewModelArgs = {
   initialQueryLocation?: {
@@ -45,7 +45,14 @@ export default function useMapViewModel({
   // Data states
   const mapRef = useRef<MapRef | null>(null);
   const locationWatchIdRef = useRef<number | null>(null);
-  const [selectedRackId, setSelectedRackId] = useState<string | null>(null);
+  const [selectedRackState, setSelectedRackState] =
+    useState<ParkingSpot | null>(null);
+  const [voteStateBySpotId, setVoteStateBySpotId] = useState<
+    Record<string, VoteDirection>
+  >(() => loadVoteState());
+  const [voteCountOverrides, setVoteCountOverrides] = useState<
+    Record<string, { upvotes: number; downvotes: number }>
+  >({});
   const [queryLocation, setQueryLocation] = useState(
     initialQueryLocation ?? {
       latitude: DEFAULT_LATITUDE,
@@ -75,7 +82,20 @@ export default function useMapViewModel({
     queryLocation.longitude,
   );
 
-  const racks: ParkingSpot[] = useMemo(() => data ?? [], [data]);
+  const racks: ParkingSpot[] = useMemo(() => {
+    return (data ?? []).map((spot) => {
+      const override = voteCountOverrides[spot.id];
+      if (!override) {
+        return spot;
+      }
+
+      return {
+        ...spot,
+        upvotes: override.upvotes,
+        downvotes: override.downvotes,
+      };
+    });
+  }, [data, voteCountOverrides]);
 
   const parkingGeoJson = useMemo(() => buildParkingSpotGeoJson(racks), [racks]);
 
@@ -84,10 +104,16 @@ export default function useMapViewModel({
     [fetchedTileIds, isProduction],
   );
 
-  const selectedRack = useMemo(
-    () => racks.find((rack) => rack.id === selectedRackId) ?? null,
-    [racks, selectedRackId],
-  );
+  const selectedRack = useMemo(() => {
+    if (!selectedRackState) {
+      return null;
+    }
+
+    return racks.find((rack) => rack.id === selectedRackState.id) ?? null;
+  }, [racks, selectedRackState]);
+  const selectedRackVote = selectedRack
+    ? (voteStateBySpotId[selectedRack.id] ?? null)
+    : null;
 
   const nearestSpots = useMemo(() => {
     const baseLat = userLocationState
@@ -121,6 +147,24 @@ export default function useMapViewModel({
     }, MAP_ERROR_DURATION_MS);
   }, []);
 
+  const { vote: submitVote } = useVoteParkingSpot({
+    setVoteCountOverrides,
+    setVoteStateBySpotId,
+    addMapError,
+  });
+
+  const handleVote = useCallback(
+    (spotId: string, vote: VoteDirection) => {
+      const currentVote = voteStateBySpotId[spotId] ?? null;
+      if (currentVote === vote) {
+        return;
+      }
+
+      submitVote(spotId, vote);
+    },
+    [submitVote, voteStateBySpotId],
+  );
+
   const handleCameraMove = useCallback(
     (latitude: number, longitude: number) => {
       const nextTile = getTileId(latitude, longitude);
@@ -129,24 +173,8 @@ export default function useMapViewModel({
       }
 
       queryTile.current = nextTile;
+      setSelectedRackState(null);
       setQueryLocation({ latitude, longitude });
-    },
-    [setQueryLocation],
-  );
-
-  const runMapSearch = useCallback(
-    (query: string) => {
-      const parsedCoordinates = parseGeoInput(query);
-      if (!parsedCoordinates) {
-        return null;
-      }
-
-      queryTile.current = getTileId(
-        parsedCoordinates.latitude,
-        parsedCoordinates.longitude,
-      );
-      setQueryLocation(parsedCoordinates);
-      return parsedCoordinates;
     },
     [setQueryLocation],
   );
@@ -190,21 +218,18 @@ export default function useMapViewModel({
 
   // Exposed handlers used by the page/UI.
   // ---------------------------------------------------------------------------
-  const handleMapSearch = useCallback(
-    (query: string) => {
-      const parsedCoordinates = runMapSearch(query);
-      if (!parsedCoordinates) {
-        addMapError(SINGAPORE_BOUNDS_HINT);
-        return false;
-      }
-
-      handleMoveToCoordinates(
-        parsedCoordinates.latitude,
-        parsedCoordinates.longitude,
-      );
-      return true;
+  const handleUpvote = useCallback(
+    (spotId: string) => {
+      void handleVote(spotId, "up");
     },
-    [addMapError, handleMoveToCoordinates, runMapSearch],
+    [handleVote],
+  );
+
+  const handleDownvote = useCallback(
+    (spotId: string) => {
+      void handleVote(spotId, "down");
+    },
+    [handleVote],
   );
 
   const handleSearchInputChange = useCallback((value: string) => {
@@ -258,6 +283,7 @@ export default function useMapViewModel({
   const selectGeocodeResult = useCallback(
     (result: OneMapGeocodeResult) => {
       handleOpenMapWithResult(result);
+      setSearchInput("");
     },
     [handleOpenMapWithResult],
   );
@@ -277,7 +303,7 @@ export default function useMapViewModel({
         if (!source || Number.isNaN(clusterId)) return;
 
         const [clusterLng, clusterLat] = event.lngLat.toArray();
-        setSelectedRackId(null);
+        setSelectedRackState(null);
 
         source.getClusterExpansionZoom(clusterId).then((zoom) => {
           if (zoom == null) return;
@@ -296,14 +322,14 @@ export default function useMapViewModel({
       );
       if (!rack) return;
 
-      setSelectedRackId(rack.id);
+      setSelectedRackState(rack);
       handleMoveToCoordinates(rack.lat, rack.lng);
     },
     [handleMoveToCoordinates, racks],
   );
 
   const handlePopupClose = useCallback(() => {
-    setSelectedRackId(null);
+    setSelectedRackState(null);
   }, []);
 
   const handleOpenGoogleMaps = useCallback(
@@ -445,7 +471,7 @@ export default function useMapViewModel({
 
   const handleZoomToSpot = useCallback(
     (spot: ParkingSpot & { distance?: number }) => {
-      setSelectedRackId(spot.id);
+      setSelectedRackState(spot);
       mapRef.current?.flyTo({
         center: [spot.lng, spot.lat],
         zoom: 16,
@@ -465,13 +491,16 @@ export default function useMapViewModel({
     geocodeSearchResults,
     geocodeError,
     isGeocodeLoading,
-    handleMapSearch,
+    handleUpvote,
+    handleDownvote,
+    //handleMapSearch,
     handleSearchInputChange,
     handleOpenMapFromEnter,
     selectGeocodeResult,
     mapErrors,
     mapRef,
     selectedRack,
+    selectedRackVote,
     tileOverlayEnabled,
     showTileOverlayToggle: !isProduction,
     handleTileOverlayToggle,

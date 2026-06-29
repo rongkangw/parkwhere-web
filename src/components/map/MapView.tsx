@@ -48,13 +48,23 @@ export default function MapView({ vm }: MapViewProps) {
     tileGeoJson,
     parkingGeoJson,
     selectedRack,
+    selectedRackVote,
     tileOverlayEnabled,
     userLocationState,
+    handleUpvote,
+    handleDownvote,
     handleMoveEnd,
     handleMapClick,
     handlePopupClose,
     handleOpenGoogleMaps,
   } = vm;
+
+  const [showFlagPopup, setShowFlagPopup] = useState(false);
+  const FlagIcon: Record<ParkingSpotFlag, React.ReactNode> = {
+    missing: <CircleQuestionMark size={16} />,
+    full: <TriangleAlert size={16} />,
+  };
+
   return (
     <div className="relative h-full w-full">
       <Map
@@ -134,9 +144,37 @@ export default function MapView({ vm }: MapViewProps) {
         {selectedRack && (
           <BikeParkingPopup
             rack={selectedRack}
+            onUpvote={handleUpvote}
+            onDownvote={handleDownvote}
+            currentVote={selectedRackVote}
             onClose={handlePopupClose}
+            onFlag={() => setShowFlagPopup(true)}
             onNavigate={handleOpenGoogleMaps}
           />
+        )}
+
+        {showFlagPopup && selectedRack && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="flex flex-col items-center rounded-lg bg-white p-6 shadow-sm">
+              <h2 className="mb-4 px-2 text-lg font-semibold">
+                What is the issue with this parking spot?
+              </h2>
+
+              {PARKING_SPOT_FLAGS.map((flag) => (
+                <button
+                  key={flag.status}
+                  className="mb-2 flex w-full justify-between rounded-md bg-sky-500 px-4 py-2 text-white hover:bg-sky-600"
+                  onClick={() => {
+                    // TODO : Implement flagging logic here
+                    setShowFlagPopup(false);
+                  }}
+                >
+                  {flag.description}
+                  {FlagIcon[flag.status]}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
 
         {userLocationState && (

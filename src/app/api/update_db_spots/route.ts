@@ -54,6 +54,20 @@ export async function POST(request: NextRequest) {
       ).values(),
     );
 
+    const normalizedSpots = uniqueSpots.map((spot) => ({
+      ...spot,
+      name: spot.name ?? "",
+      capacity: Number(spot.capacity ?? 0),
+      sheltered: Boolean(spot.sheltered),
+      parkingType: spot.parkingType ?? "",
+      sourceType: spot.sourceType ?? "official",
+      upvotes: Number(spot.upvotes ?? 0),
+      downvotes: Number(spot.downvotes ?? 0),
+      status: spot.status ?? "none",
+    }));
+
+    // Upsert all spots into the DB
+    // On conflict, update the existing record with new values, but preserve upvotes/downvotes if they are non-zero
     await sql`
       INSERT INTO parking_spots (
         uniqueid,
@@ -62,7 +76,12 @@ export async function POST(request: NextRequest) {
         capacity,
         sheltered,
         racktype,
-        type
+        type,
+        upvotes,
+        downvotes,
+        status,
+        last_seen_at,
+        is_active
       )
       SELECT
         t.uniqueid,
@@ -71,17 +90,24 @@ export async function POST(request: NextRequest) {
         t.capacity,
         t.sheltered,
         t.racktype,
-        t.type
+        t.type,
+        t.upvotes,
+        t.downvotes,
+        t.status,
+        NOW(),
+        TRUE
       FROM UNNEST(
-        ${uniqueSpots.map((s) => createParkingSpotId(s.lat, s.lng))}::text[],
-        ${uniqueSpots.map((s) => s.name)}::text[],
-        ${uniqueSpots.map((s) => s.lng)}::float8[],
-        ${uniqueSpots.map((s) => s.lat)}::float8[],
-        ${uniqueSpots.map((s) => s.occupancy)}::int[],
-        ${uniqueSpots.map((s) => s.capacity)}::int[],
-        ${uniqueSpots.map((s) => s.sheltered)}::boolean[],
-        ${uniqueSpots.map((s) => s.parkingType)}::text[],
-        ${uniqueSpots.map((s) => s.sourceType)}::text[]
+        ${normalizedSpots.map((s) => createParkingSpotId(s.lat, s.lng))}::text[],
+        ${normalizedSpots.map((s) => s.name)}::text[],
+        ${normalizedSpots.map((s) => s.lng)}::float8[],
+        ${normalizedSpots.map((s) => s.lat)}::float8[],
+        ${normalizedSpots.map((s) => s.capacity)}::int[],
+        ${normalizedSpots.map((s) => s.sheltered)}::boolean[],
+        ${normalizedSpots.map((s) => s.parkingType)}::text[],
+        ${normalizedSpots.map((s) => s.sourceType)}::text[],
+        ${normalizedSpots.map((s) => s.upvotes)}::int[],
+        ${normalizedSpots.map((s) => s.downvotes)}::int[],
+        ${normalizedSpots.map((s) => s.status)}::text[]
       ) AS t(
         uniqueid,
         name,
@@ -90,14 +116,31 @@ export async function POST(request: NextRequest) {
         capacity,
         sheltered,
         racktype,
-        type
+        type,
+        upvotes,
+        downvotes,
+        status
       )
       ON CONFLICT (uniqueid) DO UPDATE SET
         capacity = EXCLUDED.capacity,
         sheltered = EXCLUDED.sheltered,
         name = EXCLUDED.name,
         racktype = EXCLUDED.racktype,
-        type = EXCLUDED.type;
+        type = EXCLUDED.type,
+        upvotes = CASE
+          WHEN parking_spots.upvotes <> 0 THEN parking_spots.upvotes
+          ELSE EXCLUDED.upvotes
+        END,
+        downvotes = CASE
+          WHEN parking_spots.downvotes <> 0 THEN parking_spots.downvotes
+          ELSE EXCLUDED.downvotes
+        END,
+        status = CASE
+          WHEN parking_spots.status <> 'none' THEN parking_spots.status
+          ELSE EXCLUDED.status
+        END,
+        last_seen_at = NOW(),
+        is_active = TRUE;
       `;
 
     await sql`
@@ -115,7 +158,7 @@ export async function POST(request: NextRequest) {
     `;
 
     return NextResponse.json(
-      { success: true, upsertedCount: uniqueSpots.length, tileId },
+      { success: true, upsertedCount: normalizedSpots.length, tileId },
       { status: 200 },
     );
   } catch (error) {

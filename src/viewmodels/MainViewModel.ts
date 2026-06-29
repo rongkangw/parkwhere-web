@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import useGeocodingSearch from "@/hooks/useGeocodingSearch";
 import { OneMapGeocodeResult } from "@/services/external/fetchGeocodeResults";
@@ -8,16 +8,11 @@ import { OneMapGeocodeResult } from "@/services/external/fetchGeocodeResults";
 export default function useMainViewModel() {
   const router = useRouter();
   const [searchInput, setSearchInput] = useState("");
-  const [searchResults, setSearchResults] = useState<OneMapGeocodeResult[]>([]);
   const {
     geocodeSearchResults: geocodeResults,
     isGeocodeLoading,
     geocodeError,
   } = useGeocodingSearch(searchInput);
-
-  useEffect(() => {
-    setSearchResults(geocodeResults);
-  }, [geocodeResults]);
 
   const handleSearchInputChange = useCallback((value: string) => {
     setSearchInput(value);
@@ -41,13 +36,13 @@ export default function useMainViewModel() {
   );
 
   const handleOpenMapFromEnter = useCallback(() => {
-    if (searchResults.length > 0) {
-      handleOpenMapWithResult(searchResults[0]);
+    if (geocodeResults.length > 0) {
+      handleOpenMapWithResult(geocodeResults[0]);
       return true;
     }
 
     return false;
-  }, [handleOpenMapWithResult, searchResults]);
+  }, [handleOpenMapWithResult, geocodeResults]);
 
   const selectGeocodeResult = useCallback(
     (result: OneMapGeocodeResult) => {
@@ -66,7 +61,7 @@ export default function useMainViewModel() {
 
   return {
     searchInput,
-    searchResults,
+    geocodeResults,
     geocodeError,
     handleSearchInputChange,
     isGeocodeLoading,
