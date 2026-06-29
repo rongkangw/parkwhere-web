@@ -82,10 +82,15 @@ export default function SearchBar({
                     <button
                       type="button"
                       className="w-full px-3 py-2 text-left hover:bg-gray-100"
-                      onClick={() => onSelectResult(result)}
+                      onClick={() => {
+                        onSelectResult(result);
+                        setInternalSearchInput("");
+                      }}
                     >
                       <p className="text-sm font-medium text-slate-900">
-                        {result.BUILDING || "Unnamed place"}
+                        {result.BUILDING == "NIL"
+                          ? result.ROAD_NAME
+                          : result.BUILDING}
                       </p>
                       <p className="text-xs text-slate-900">{result.ADDRESS}</p>
                     </button>

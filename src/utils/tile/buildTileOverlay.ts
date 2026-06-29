@@ -1,10 +1,10 @@
 import {
-  MAX_LAT,
-  MAX_LNG,
-  MIN_LAT,
   MIN_LNG,
   TILE_SIZE,
-} from "@/core/constants/ui/MapConstants";
+  MAX_LNG,
+  MIN_LAT,
+  MAX_LAT,
+} from "@/core/constants/UiConstants";
 import type { FeatureCollection, Polygon } from "geojson";
 
 export default function buildTileOverlay(

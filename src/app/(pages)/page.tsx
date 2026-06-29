@@ -8,7 +8,7 @@ export default function MainPage() {
   const vm = useMainViewModel();
   const {
     searchInput,
-    searchResults,
+    geocodeResults,
     geocodeError,
     handleSearchInputChange,
     isGeocodeLoading,
@@ -34,7 +34,7 @@ export default function MainPage() {
             onChangeValue={handleSearchInputChange}
             onEnter={handleOpenMapFromEnter}
             placeholder="Search a place"
-            searchResults={searchResults}
+            searchResults={geocodeResults}
             isGeocodeLoading={isGeocodeLoading}
             geocodeError={geocodeError}
             onSelectResult={selectGeocodeResult}

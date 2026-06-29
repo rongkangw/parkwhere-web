@@ -4,7 +4,7 @@ import {
   TOKEN_REFRESH_BUFFER_MS,
   ONEMAP_AUTH_URL,
   ONEMAP_GEOCODE_URL,
-} from "@/core/constants/api/OneMapApiConstants";
+} from "@/core/constants/ApiConstants";
 import { NextRequest, NextResponse } from "next/server";
 
 type OneMapAuthResponse = {

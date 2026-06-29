@@ -13,6 +13,8 @@ import useParkingSpots from "@/hooks/useParkingSpots";
 import useGeocodingSearch from "@/hooks/useGeocodingSearch";
 import useGoogleMapsRedirect from "@/hooks/useGoogleMapsRedirect";
 import { OneMapGeocodeResult } from "@/services/external/fetchGeocodeResults";
+import UserLocationState from "@/core/types/map/UserLocationState";
+import MapError from "@/core/types/map/MapError";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,

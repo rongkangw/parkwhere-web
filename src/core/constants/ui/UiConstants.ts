@@ -1,1 +1,0 @@
-export const SIDEBAR_MAX_DISPLAYED_SPOTS = 20;

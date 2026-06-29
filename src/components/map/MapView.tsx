@@ -6,29 +6,34 @@ import Map, {
   Marker,
   Source,
 } from "react-map-gl/maplibre";
-import {
-  bikeParkingClusterCountLayout,
-  bikeParkingClusterCountPaint,
-  bikeParkingClusterLayerPaint,
-  bikeParkingLayerPaint,
-} from "@/core/constants/style/MapMarkerLayerStyle";
+
 import BikeParkingPopup from "@/components/map/ParkingDetailPopup";
 
+import useMapViewModel from "@/viewmodels/MapViewModel";
+import {
+  mapStyle,
+  bikeParkingClusterLayerPaint,
+  bikeParkingClusterCountLayout,
+  bikeParkingClusterCountPaint,
+  bikeParkingLayerPaint,
+} from "@/core/constants/MapStyle";
 import {
   INITIAL_ZOOM,
-  MAP_CLUSTER_COUNT_LAYER_ID,
+  MIN_LNG,
+  MIN_LAT,
+  MAX_LNG,
+  MAX_LAT,
+  MAP_LAYER_ID,
   MAP_CLUSTER_LAYER_ID,
+  MAP_SOURCE_ID,
   MAP_CLUSTER_MAX_ZOOM,
   MAP_CLUSTER_RADIUS,
-  MAX_LAT,
-  MAX_LNG,
-  MAP_LAYER_ID,
-  MAP_SOURCE_ID,
-  MIN_LAT,
-  MIN_LNG,
-} from "@/core/constants/ui/MapConstants";
-import useMapViewModel from "@/viewmodels/MapViewModel";
-import { mapStyle } from "@/core/constants/style/MapStyle";
+  MAP_CLUSTER_COUNT_LAYER_ID,
+  PARKING_SPOT_FLAGS,
+  ParkingSpotFlag,
+} from "@/core/constants/UiConstants";
+import { useState } from "react";
+import { CircleQuestionMark, TriangleAlert } from "lucide-react";
 
 const MAP_ATTRIBUTION = "© Singapore Land Authority, OneMap | © Thunderforest";
 

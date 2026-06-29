@@ -1,9 +1,9 @@
 import {
-  MAX_LAT,
-  MAX_LNG,
   MIN_LAT,
+  MAX_LAT,
   MIN_LNG,
-} from "@/core/constants/ui/MapConstants";
+  MAX_LNG,
+} from "@/core/constants/UiConstants";
 
 export default function parseGeoInput(
   rawValue: string,

@@ -27,3 +27,18 @@ export const MAP_ERROR_DURATION_MS = 5000;
 
 export const MAP_ATTRIBUTION =
   "© Singapore Land Authority, OneMap | © Thunderforest";
+
+export const SIDEBAR_MAX_DISPLAYED_SPOTS = 20;
+
+export const PARKING_SPOT_FLAGS = [
+  {
+    status: "missing",
+    description: "The parking spot no longer exists.",
+  },
+  {
+    status: "full",
+    description: "The parking spot is full.",
+  },
+] as const;
+
+export type ParkingSpotFlag = (typeof PARKING_SPOT_FLAGS)[number]["status"];

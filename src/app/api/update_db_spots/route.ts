@@ -59,7 +59,6 @@ export async function POST(request: NextRequest) {
         uniqueid,
         name,
         location,
-        occupancy,
         capacity,
         sheltered,
         racktype,
@@ -69,7 +68,6 @@ export async function POST(request: NextRequest) {
         t.uniqueid,
         t.name,
         ST_SetSRID(ST_MakePoint(t.lng, t.lat), 4326)::geography,
-        t.occupancy,
         t.capacity,
         t.sheltered,
         t.racktype,
@@ -89,14 +87,12 @@ export async function POST(request: NextRequest) {
         name,
         lng,
         lat,
-        occupancy,
         capacity,
         sheltered,
         racktype,
         type
       )
       ON CONFLICT (uniqueid) DO UPDATE SET
-        occupancy = EXCLUDED.occupancy,
         capacity = EXCLUDED.capacity,
         sheltered = EXCLUDED.sheltered,
         name = EXCLUDED.name,

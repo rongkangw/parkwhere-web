@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import parseGeoInput from "@/utils/geocoding/parseGeoInput";
 import fetchGeocodeResults, {
   OneMapGeocodeResult,
@@ -19,33 +19,35 @@ export default function useGeocodingSearch(
   const [isGeocodeLoading, setIsGeocodeLoading] = useState(false);
   const [geocodeError, setGeocodeError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const trimmedSearchValue = searchValue.trim();
-    const isCoordinateInput = parseGeoInput(trimmedSearchValue) !== null;
+  const validatedSearchValue = useMemo(() => {
+    const trimmed = searchValue.trim();
+    if (!trimmed || parseGeoInput(trimmed) !== null) {
+      return null;
+    }
+    return trimmed;
+  }, [searchValue]);
 
-    // ignore empty or coordinate inputs
-    if (!trimmedSearchValue || isCoordinateInput) {
-      setGeocodeSearchResults([]);
-      setGeocodeError(null);
-      setIsGeocodeLoading(false);
+  useEffect(() => {
+    if (!validatedSearchValue) {
       return;
     }
 
-    setIsGeocodeLoading(true);
-    setGeocodeError(null);
-
     const abortController = new AbortController();
+
     const timeoutId = window.setTimeout(async () => {
+      setIsGeocodeLoading(true);
+      setGeocodeError(null);
+
       try {
         const geocodeResults = await fetchGeocodeResults(
-          trimmedSearchValue,
+          validatedSearchValue,
           abortController.signal,
         );
         setGeocodeSearchResults(geocodeResults.slice(0, 8));
       } catch (error) {
         if (abortController.signal.aborted) {
           console.info(
-            `Geocoding request aborted for query "${trimmedSearchValue}".`,
+            `Geocoding request aborted for query "${validatedSearchValue}".`,
           );
           return;
         }
@@ -64,7 +66,7 @@ export default function useGeocodingSearch(
       window.clearTimeout(timeoutId);
       abortController.abort();
     };
-  }, [searchValue]);
+  }, [validatedSearchValue]);
 
   return {
     geocodeSearchResults,

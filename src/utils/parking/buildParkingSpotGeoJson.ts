@@ -16,7 +16,6 @@ export default function buildParkingSpotGeoJson(
           rackType: rack.parkingType,
           sourceType: rack.sourceType,
           capacity: rack.capacity,
-          occupancy: rack.occupancy,
         },
         geometry: {
           type: "Point" as const,
