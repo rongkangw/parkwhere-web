@@ -1,10 +1,12 @@
 import ParkingSpot from "@/core/types/parking/ParkingSpot";
 
-interface SourceTypeBadgeProps {
+interface SourceTypeTagProps {
   sourceType: ParkingSpot["sourceType"];
 }
 
-export default function PopupSourceTag({ sourceType }: SourceTypeBadgeProps) {
+export default function ParkingSpotDetailTag({
+  sourceType,
+}: SourceTypeTagProps) {
   const isOfficial = sourceType === "official";
 
   return (

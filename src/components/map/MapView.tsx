@@ -7,7 +7,7 @@ import Map, {
   Source,
 } from "react-map-gl/maplibre";
 
-import BikeParkingPopup from "@/components/map/ParkingDetailPopup";
+import ParkingSpotDetailWindow from "@/components/map/ParkingSpotDetailWindow";
 
 import useMapViewModel from "@/viewmodels/MapViewModel";
 import {
@@ -47,8 +47,8 @@ export default function MapView({ vm }: MapViewProps) {
     queryLocation,
     tileGeoJson,
     parkingGeoJson,
-    selectedRack,
-    selectedRackVote,
+    selectedSpot,
+    selectedSpotVote,
     tileOverlayEnabled,
     userLocationState,
     handleUpvote,
@@ -141,19 +141,19 @@ export default function MapView({ vm }: MapViewProps) {
           </Source>
         )}
 
-        {selectedRack && (
-          <BikeParkingPopup
-            rack={selectedRack}
+        {selectedSpot && (
+          <ParkingSpotDetailWindow
+            spot={selectedSpot}
             onUpvote={handleUpvote}
             onDownvote={handleDownvote}
-            currentVote={selectedRackVote}
+            currentVote={selectedSpotVote}
             onClose={handlePopupClose}
             onFlag={() => setShowFlagPopup(true)}
             onNavigate={handleOpenGoogleMaps}
           />
         )}
 
-        {showFlagPopup && selectedRack && (
+        {showFlagPopup && selectedSpot && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="flex flex-col items-center rounded-lg bg-white p-6 shadow-sm">
               <h2 className="mb-4 px-2 text-lg font-semibold">

@@ -2,7 +2,7 @@ export default interface ParkingSpotApiResponse {
   Description: string;
   Latitude: number;
   Longitude: number;
-  RackType: string;
-  RackCount: number;
+  SpotType: string;
+  SpotCount: number;
   ShelterIndicator: "Y" | "N";
 }

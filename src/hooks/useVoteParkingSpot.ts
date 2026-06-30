@@ -1,50 +1,145 @@
 import { useCallback } from "react";
 import updateParkingSpotVote from "@/services/db/updateDbSpotVote";
-import { saveVoteState } from "@/services/local/fetchLocalSpotVote";
-import type { VoteDirection } from "@/core/types/parking/ParkingSpot";
+import { saveLocalUserVotes } from "@/services/local/fetchLocalSpotVote";
+import type {
+  LocalParkingSpotVoteCounts,
+  LocalUserVotes,
+  ParkingSpotVoteCounts,
+  VoteDirection,
+} from "@/core/types/parking/ParkingSpot";
 
 type UseVoteParkingSpotArgs = {
-  setVoteCountOverrides: React.Dispatch<
-    React.SetStateAction<Record<string, { upvotes: number; downvotes: number }>>
+  setLocalParkingSpotVoteCounts: React.Dispatch<
+    React.SetStateAction<LocalParkingSpotVoteCounts>
   >;
-  setVoteStateBySpotId: React.Dispatch<
-    React.SetStateAction<Record<string, VoteDirection>>
-  >;
+  setLocalUserVotes: React.Dispatch<React.SetStateAction<LocalUserVotes>>;
   addMapError: (message: string) => void;
 };
 
+type VoteArgs = {
+  spotId: string;
+  submittedVote: VoteDirection | null;
+  previousVote: VoteDirection | null;
+  previousCounts: ParkingSpotVoteCounts;
+};
+
+function calculateOptimisticVoteCounts({
+  previousCounts,
+  previousVote,
+  nextVote,
+}: Pick<
+  VoteArgs,
+  "previousCounts" | "previousVote"
+> & {
+  nextVote: VoteDirection | null;
+}): ParkingSpotVoteCounts {
+  const optimisticCounts = {
+    upvotes: previousCounts.upvotes,
+    downvotes: previousCounts.downvotes,
+  };
+
+  if (previousVote === "up") {
+    optimisticCounts.upvotes -= 1;
+  }
+
+  if (previousVote === "down") {
+    optimisticCounts.downvotes -= 1;
+  }
+
+  if (nextVote === "up") {
+    optimisticCounts.upvotes += 1;
+  }
+
+  if (nextVote === "down") {
+    optimisticCounts.downvotes += 1;
+  }
+
+  return {
+    upvotes: Math.max(0, optimisticCounts.upvotes),
+    downvotes: Math.max(0, optimisticCounts.downvotes),
+  };
+}
+
+function setLocalUserVoteForSpot(
+  localUserVotes: LocalUserVotes,
+  spotId: string,
+  vote: VoteDirection | null,
+): LocalUserVotes {
+  const nextLocalUserVotes = { ...localUserVotes };
+
+  if (vote) {
+    nextLocalUserVotes[spotId] = vote;
+  } else {
+    delete nextLocalUserVotes[spotId];
+  }
+
+  return nextLocalUserVotes;
+}
+
 export default function useVoteParkingSpot({
-  setVoteCountOverrides,
-  setVoteStateBySpotId,
+  setLocalParkingSpotVoteCounts,
+  setLocalUserVotes,
   addMapError,
 }: UseVoteParkingSpotArgs) {
   const vote = useCallback(
-    (spotId: string, voteChoice: VoteDirection) => {
+    ({ spotId, submittedVote, previousVote, previousCounts }: VoteArgs) => {
+      // Optimistically update the UI while the DB request is in flight.
+      const optimisticCounts = calculateOptimisticVoteCounts({
+        previousCounts,
+        previousVote,
+        nextVote: submittedVote,
+      });
+
+      setLocalParkingSpotVoteCounts((current) => ({
+        ...current,
+        [spotId]: optimisticCounts,
+      }));
+
+      setLocalUserVotes((current) =>
+        setLocalUserVoteForSpot(current, spotId, submittedVote),
+      );
+
       void (async () => {
         try {
-          const result = await updateParkingSpotVote(spotId, voteChoice);
+          const dbVoteResult = await updateParkingSpotVote(
+            spotId,
+            submittedVote,
+          );
 
-          setVoteCountOverrides((current) => ({
+          setLocalParkingSpotVoteCounts((current) => ({
             ...current,
             [spotId]: {
-              upvotes: result.upvotes,
-              downvotes: result.downvotes,
+              upvotes: dbVoteResult.dbUpvotes,
+              downvotes: dbVoteResult.dbDownvotes,
             },
           }));
 
-          setVoteStateBySpotId((current) => {
-            const next = { ...current, [spotId]: result.userVote };
-            saveVoteState(next);
-            return next;
+          setLocalUserVotes((current) => {
+            const nextLocalUserVotes = setLocalUserVoteForSpot(
+              current,
+              spotId,
+              dbVoteResult.dbUserVote,
+            );
+            saveLocalUserVotes(nextLocalUserVotes);
+            return nextLocalUserVotes;
           });
         } catch (error) {
+          setLocalParkingSpotVoteCounts((current) => ({
+            ...current,
+            [spotId]: previousCounts,
+          }));
+
+          setLocalUserVotes((current) =>
+            setLocalUserVoteForSpot(current, spotId, previousVote),
+          );
+
           addMapError(
             error instanceof Error ? error.message : "Failed to submit vote.",
           );
         }
       })();
     },
-    [setVoteCountOverrides, setVoteStateBySpotId, addMapError],
+    [setLocalParkingSpotVoteCounts, setLocalUserVotes, addMapError],
   );
 
   return { vote };

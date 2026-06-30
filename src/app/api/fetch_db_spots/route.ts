@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 
-type DbRackRow = {
+type DbSpotRow = {
   uniqueid: string;
   name: string;
   capacity: number;
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
           ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326),
           ${dist}
       );
-    `) as DbRackRow[];
+    `) as DbSpotRow[];
 
     return NextResponse.json(rows, { status: 200 });
   } catch (error) {

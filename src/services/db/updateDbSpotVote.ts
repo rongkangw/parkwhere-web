@@ -2,7 +2,7 @@ import { VoteDirection } from "@/core/types/parking/ParkingSpot";
 
 type UpdateDbSpotVotePayload = {
   spotId: string;
-  vote: VoteDirection;
+  vote: VoteDirection | null;
 };
 
 type UpdateDbSpotVoteResponse = {
@@ -10,13 +10,21 @@ type UpdateDbSpotVoteResponse = {
   spotId: string;
   upvotes: number;
   downvotes: number;
-  userVote: VoteDirection;
+  userVote: VoteDirection | null;
+};
+
+type UpdateDbSpotVoteResult = {
+  success: boolean;
+  spotId: string;
+  dbUpvotes: number;
+  dbDownvotes: number;
+  dbUserVote: VoteDirection | null;
 };
 
 export default async function updateParkingSpotVote(
   spotId: string,
-  vote: VoteDirection,
-): Promise<UpdateDbSpotVoteResponse> {
+  vote: VoteDirection | null,
+): Promise<UpdateDbSpotVoteResult> {
   const payload: UpdateDbSpotVotePayload = {
     spotId,
     vote,
@@ -41,7 +49,9 @@ export default async function updateParkingSpotVote(
   if (
     typeof data.upvotes !== "number" ||
     typeof data.downvotes !== "number" ||
-    (data.userVote !== "up" && data.userVote !== "down") ||
+    (data.userVote !== "up" &&
+      data.userVote !== "down" &&
+      data.userVote !== null) ||
     typeof data.spotId !== "string"
   ) {
     throw new Error("Vote response was incomplete");
@@ -50,8 +60,8 @@ export default async function updateParkingSpotVote(
   return {
     success: true,
     spotId: data.spotId,
-    upvotes: data.upvotes,
-    downvotes: data.downvotes,
-    userVote: data.userVote,
+    dbUpvotes: data.upvotes,
+    dbDownvotes: data.downvotes,
+    dbUserVote: data.userVote,
   };
 }

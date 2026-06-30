@@ -15,5 +15,5 @@ export const TOKEN_REFRESH_BUFFER_MS = 60_000;
 
 // DB API Constants
 export const VOTE_SESSION_COOKIE = "parkwhere_vote_session";
-export const VOTE_STATE_KEY = "parkwhere_vote_state";
+export const LOCAL_USER_VOTES_KEY = "parkwhere_vote_state";
 export const VOTE_SESSION_MAX_AGE = 60 * 60 * 24 * 365;

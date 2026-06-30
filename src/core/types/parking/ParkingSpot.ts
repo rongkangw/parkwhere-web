@@ -13,3 +13,12 @@ export default interface ParkingSpot {
 }
 
 export type VoteDirection = "up" | "down";
+export type LocalUserVotes = Record<string, VoteDirection>;
+export type ParkingSpotVoteCounts = Pick<
+  ParkingSpot,
+  "upvotes" | "downvotes"
+>;
+export type LocalParkingSpotVoteCounts = Record<
+  string,
+  ParkingSpotVoteCounts
+>;

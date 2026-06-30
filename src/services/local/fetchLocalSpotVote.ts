@@ -1,12 +1,15 @@
-import { VOTE_STATE_KEY } from "@/core/constants/ApiConstants";
-import { VoteDirection } from "@/core/types/parking/ParkingSpot";
+import { LOCAL_USER_VOTES_KEY } from "@/core/constants/ApiConstants";
+import type {
+  LocalUserVotes,
+  VoteDirection,
+} from "@/core/types/parking/ParkingSpot";
 
-export function loadVoteState(): Record<string, VoteDirection> {
+export function loadLocalUserVotes(): LocalUserVotes {
   if (typeof window === "undefined") {
     return {};
   }
 
-  const rawState = window.localStorage.getItem(VOTE_STATE_KEY);
+  const rawState = window.localStorage.getItem(LOCAL_USER_VOTES_KEY);
   if (!rawState) {
     return {};
   }
@@ -24,15 +27,13 @@ export function loadVoteState(): Record<string, VoteDirection> {
   }
 }
 
-export function saveVoteState(
-  voteStateBySpotId: Record<string, VoteDirection>,
-): void {
+export function saveLocalUserVotes(localUserVotes: LocalUserVotes): void {
   if (typeof window === "undefined") {
     return;
   }
 
   window.localStorage.setItem(
-    VOTE_STATE_KEY,
-    JSON.stringify(voteStateBySpotId),
+    LOCAL_USER_VOTES_KEY,
+    JSON.stringify(localUserVotes),
   );
 }

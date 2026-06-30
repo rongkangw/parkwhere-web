@@ -8,7 +8,10 @@ import getTileId from "@/utils/tile/getTileId";
 import buildParkingSpotGeoJson from "@/utils/parking/buildParkingSpotGeoJson";
 import buildTileOverlay from "@/utils/tile/buildTileOverlay";
 import calculateHaversineDistance from "@/utils/parking/calculateHaversineDistance";
-import ParkingSpot, { VoteDirection } from "@/core/types/parking/ParkingSpot";
+import ParkingSpot, {
+  LocalParkingSpotVoteCounts,
+  VoteDirection,
+} from "@/core/types/parking/ParkingSpot";
 import useParkingSpots from "@/hooks/useParkingSpots";
 import useGeocodingSearch from "@/hooks/useGeocodingSearch";
 import useGoogleMapsRedirect from "@/hooks/useGoogleMapsRedirect";
@@ -28,7 +31,7 @@ import {
   SIDEBAR_MAX_DISPLAYED_SPOTS,
   USER_LOCATION_ERROR_MESSAGE,
 } from "@/core/constants/UiConstants";
-import { loadVoteState } from "@/services/local/fetchLocalSpotVote";
+import { loadLocalUserVotes } from "@/services/local/fetchLocalSpotVote";
 
 type UseMapViewModelArgs = {
   initialQueryLocation?: {
@@ -45,14 +48,13 @@ export default function useMapViewModel({
   // Data states
   const mapRef = useRef<MapRef | null>(null);
   const locationWatchIdRef = useRef<number | null>(null);
-  const [selectedRackState, setSelectedRackState] =
+  const [selectedSpotState, setSelectedSpotState] =
     useState<ParkingSpot | null>(null);
-  const [voteStateBySpotId, setVoteStateBySpotId] = useState<
-    Record<string, VoteDirection>
-  >(() => loadVoteState());
-  const [voteCountOverrides, setVoteCountOverrides] = useState<
-    Record<string, { upvotes: number; downvotes: number }>
-  >({});
+  const [localUserVotes, setLocalUserVotes] = useState(() =>
+    loadLocalUserVotes(),
+  );
+  const [localParkingSpotVoteCounts, setLocalParkingSpotVoteCounts] =
+    useState<LocalParkingSpotVoteCounts>({});
   const [queryLocation, setQueryLocation] = useState(
     initialQueryLocation ?? {
       latitude: DEFAULT_LATITUDE,
@@ -82,37 +84,37 @@ export default function useMapViewModel({
     queryLocation.longitude,
   );
 
-  const racks: ParkingSpot[] = useMemo(() => {
+  const spots: ParkingSpot[] = useMemo(() => {
     return (data ?? []).map((spot) => {
-      const override = voteCountOverrides[spot.id];
-      if (!override) {
+      const localVoteCounts = localParkingSpotVoteCounts[spot.id];
+      if (!localVoteCounts) {
         return spot;
       }
 
       return {
         ...spot,
-        upvotes: override.upvotes,
-        downvotes: override.downvotes,
+        upvotes: localVoteCounts.upvotes,
+        downvotes: localVoteCounts.downvotes,
       };
     });
-  }, [data, voteCountOverrides]);
+  }, [data, localParkingSpotVoteCounts]);
 
-  const parkingGeoJson = useMemo(() => buildParkingSpotGeoJson(racks), [racks]);
+  const parkingGeoJson = useMemo(() => buildParkingSpotGeoJson(spots), [spots]);
 
   const tileGeoJson = useMemo(
     () => (isProduction ? null : buildTileOverlay(fetchedTileIds)),
     [fetchedTileIds, isProduction],
   );
 
-  const selectedRack = useMemo(() => {
-    if (!selectedRackState) {
+  const selectedSpot = useMemo(() => {
+    if (!selectedSpotState) {
       return null;
     }
 
-    return racks.find((rack) => rack.id === selectedRackState.id) ?? null;
-  }, [racks, selectedRackState]);
-  const selectedRackVote = selectedRack
-    ? (voteStateBySpotId[selectedRack.id] ?? null)
+    return spots.find((spot) => spot.id === selectedSpotState.id) ?? null;
+  }, [spots, selectedSpotState]);
+  const selectedSpotVote = selectedSpot
+    ? (localUserVotes[selectedSpot.id] ?? null)
     : null;
 
   const nearestSpots = useMemo(() => {
@@ -123,14 +125,14 @@ export default function useMapViewModel({
       ? userLocationState.longitude
       : queryLocation.longitude;
 
-    return racks
+    return spots
       .map((r) => ({
         ...r,
         distance: calculateHaversineDistance(baseLat, baseLng, r.lat, r.lng),
       }))
       .sort((a, b) => a.distance - b.distance)
       .slice(0, SIDEBAR_MAX_DISPLAYED_SPOTS);
-  }, [racks, userLocationState, queryLocation]);
+  }, [spots, userLocationState, queryLocation]);
 
   // Internal helpers used by other callbacks.
   // ---------------------------------------------------------------------------
@@ -148,21 +150,35 @@ export default function useMapViewModel({
   }, []);
 
   const { vote: submitVote } = useVoteParkingSpot({
-    setVoteCountOverrides,
-    setVoteStateBySpotId,
+    setLocalParkingSpotVoteCounts,
+    setLocalUserVotes,
     addMapError,
   });
 
   const handleVote = useCallback(
     (spotId: string, vote: VoteDirection) => {
-      const currentVote = voteStateBySpotId[spotId] ?? null;
-      if (currentVote === vote) {
+      const spot = spots.find((item) => item.id === spotId);
+      if (!spot) {
         return;
       }
 
-      submitVote(spotId, vote);
+      const localUserVote = localUserVotes[spotId] ?? null;
+
+      // If the user clicks the same vote again, treat it as a "remove vote"
+      const submittedVote = localUserVote === vote ? null : vote;
+
+      console.debug(`Submitting vote for spot ${spotId}: ${submittedVote}`);
+      submitVote({
+        spotId,
+        submittedVote,
+        previousVote: localUserVote,
+        previousCounts: {
+          upvotes: spot.upvotes,
+          downvotes: spot.downvotes,
+        },
+      });
     },
-    [submitVote, voteStateBySpotId],
+    [localUserVotes, spots, submitVote],
   );
 
   const handleCameraMove = useCallback(
@@ -173,7 +189,6 @@ export default function useMapViewModel({
       }
 
       queryTile.current = nextTile;
-      setSelectedRackState(null);
       setQueryLocation({ latitude, longitude });
     },
     [setQueryLocation],
@@ -303,7 +318,7 @@ export default function useMapViewModel({
         if (!source || Number.isNaN(clusterId)) return;
 
         const [clusterLng, clusterLat] = event.lngLat.toArray();
-        setSelectedRackState(null);
+        setSelectedSpotState(null);
 
         source.getClusterExpansionZoom(clusterId).then((zoom) => {
           if (zoom == null) return;
@@ -317,26 +332,26 @@ export default function useMapViewModel({
       );
       if (!clickedFeature) return;
 
-      const rack = racks.find(
+      const spot = spots.find(
         (item) => item.id === String(clickedFeature.properties?.id),
       );
-      if (!rack) return;
+      if (!spot) return;
 
-      setSelectedRackState(rack);
-      handleMoveToCoordinates(rack.lat, rack.lng);
+      setSelectedSpotState(spot);
+      handleMoveToCoordinates(spot.lat, spot.lng);
     },
-    [handleMoveToCoordinates, racks],
+    [handleMoveToCoordinates, spots],
   );
 
   const handlePopupClose = useCallback(() => {
-    setSelectedRackState(null);
+    setSelectedSpotState(null);
   }, []);
 
   const handleOpenGoogleMaps = useCallback(
-    (rack: ParkingSpot) => {
+    (spot: ParkingSpot) => {
       const target = {
-        latitude: rack.lat,
-        longitude: rack.lng,
+        latitude: spot.lat,
+        longitude: spot.lng,
       };
 
       const opened = userLocationState
@@ -471,7 +486,7 @@ export default function useMapViewModel({
 
   const handleZoomToSpot = useCallback(
     (spot: ParkingSpot & { distance?: number }) => {
-      setSelectedRackState(spot);
+      setSelectedSpotState(spot);
       mapRef.current?.flyTo({
         center: [spot.lng, spot.lat],
         zoom: 16,
@@ -483,7 +498,7 @@ export default function useMapViewModel({
   );
 
   return {
-    racks,
+    spots,
     fetchedTileIds,
     isLoading,
     queryLocation,
@@ -493,14 +508,13 @@ export default function useMapViewModel({
     isGeocodeLoading,
     handleUpvote,
     handleDownvote,
-    //handleMapSearch,
     handleSearchInputChange,
     handleOpenMapFromEnter,
     selectGeocodeResult,
     mapErrors,
     mapRef,
-    selectedRack,
-    selectedRackVote,
+    selectedSpot,
+    selectedSpotVote,
     tileOverlayEnabled,
     showTileOverlayToggle: !isProduction,
     handleTileOverlayToggle,

@@ -10,13 +10,13 @@ import { VoteDirection } from "@/core/types/parking/ParkingSpot";
 
 type VoteParkingSpotRequest = {
   spotId: string;
-  vote: VoteDirection;
+  vote: VoteDirection | null;
 };
 
-type VoteRow = {
+type DbVoteRow = {
   upvotes: number;
   downvotes: number;
-  user_vote: VoteDirection;
+  user_vote: VoteDirection | null;
 };
 
 export async function POST(request: NextRequest) {
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   }
 
   const { spotId, vote } = body;
-  if (!spotId || (vote !== "up" && vote !== "down")) {
+  if (!spotId || (vote !== "up" && vote !== "down" && vote !== null)) {
     return NextResponse.json(
       { error: "Invalid body. Required: spotId, vote" },
       { status: 400 },
@@ -48,50 +48,56 @@ export async function POST(request: NextRequest) {
   }
 
   const sql = neon(databaseUrl);
-  const voteValue = vote === "up" ? 1 : -1;
 
   try {
-    const [spot] = (await sql`
-      WITH current_vote AS (
-        SELECT vote
-        FROM parking_spot_votes
-        WHERE user_id = ${userId}
-          AND spot_id = ${spotId}
-      ),
-      upsert_vote AS (
-        INSERT INTO parking_spot_votes (user_id, spot_id, vote)
-        VALUES (${userId}, ${spotId}, ${voteValue})
-        ON CONFLICT (user_id, spot_id)
-        DO UPDATE SET vote = EXCLUDED.vote
-        RETURNING vote
-      ),
-      updated_spot AS (
+    const voteMutation =
+      vote === null
+        ? sql`
+            DELETE FROM parking_spot_votes
+            WHERE user_id = ${userId}
+              AND spot_id = ${spotId};
+          `
+        : sql`
+            INSERT INTO parking_spot_votes (user_id, spot_id, vote)
+            SELECT ${userId}, ${spotId}, ${vote === "up" ? 1 : -1}
+            WHERE EXISTS (
+              SELECT 1
+              FROM parking_spots
+              WHERE uniqueid = ${spotId}
+            )
+            ON CONFLICT (user_id, spot_id)
+            DO UPDATE SET
+              vote = EXCLUDED.vote,
+              updated_at = NOW();
+          `;
+
+    const [, dbVoteRows] = await sql.transaction([
+      voteMutation,
+      sql`
         UPDATE parking_spots
         SET
-          upvotes = upvotes + CASE
-            WHEN (SELECT vote FROM current_vote) IS NULL AND ${voteValue} = 1 THEN 1
-            WHEN (SELECT vote FROM current_vote) = -1 AND ${voteValue} = 1 THEN 1
-            WHEN (SELECT vote FROM current_vote) = 1 AND ${voteValue} = -1 THEN -1
-            ELSE 0
-          END,
-          downvotes = downvotes + CASE
-            WHEN (SELECT vote FROM current_vote) IS NULL AND ${voteValue} = -1 THEN 1
-            WHEN (SELECT vote FROM current_vote) = 1 AND ${voteValue} = -1 THEN 1
-            WHEN (SELECT vote FROM current_vote) = -1 AND ${voteValue} = 1 THEN -1
-            ELSE 0
-          END
+          upvotes = (
+            SELECT COUNT(*)::int
+            FROM parking_spot_votes
+            WHERE spot_id = ${spotId}
+              AND vote = 1
+          ),
+          downvotes = (
+            SELECT COUNT(*)::int
+            FROM parking_spot_votes
+            WHERE spot_id = ${spotId}
+              AND vote = -1
+          )
         WHERE uniqueid = ${spotId}
-        RETURNING upvotes, downvotes
-      )
-      SELECT
-        COALESCE((SELECT upvotes FROM updated_spot), parking_spots.upvotes) AS upvotes,
-        COALESCE((SELECT downvotes FROM updated_spot), parking_spots.downvotes) AS downvotes,
-        (SELECT vote FROM upsert_vote) AS user_vote
-      FROM parking_spots
-      WHERE uniqueid = ${spotId};
-    `) as VoteRow[];
+        RETURNING
+          upvotes,
+          downvotes,
+          ${vote}::text AS user_vote;
+      `,
+    ]);
+    const [dbVoteRow] = dbVoteRows as DbVoteRow[];
 
-    if (!spot) {
+    if (!dbVoteRow) {
       return NextResponse.json(
         { error: "Parking spot not found" },
         { status: 404 },
@@ -102,9 +108,9 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         spotId,
-        upvotes: spot.upvotes,
-        downvotes: spot.downvotes,
-        userVote: vote === "up" ? "up" : "down",
+        upvotes: dbVoteRow.upvotes,
+        downvotes: dbVoteRow.downvotes,
+        userVote: dbVoteRow.user_vote,
       },
       { status: 200 },
     );
